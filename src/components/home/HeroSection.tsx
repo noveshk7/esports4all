@@ -1,10 +1,11 @@
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
-    
+  const navigate = useNavigate();
+
   return (
-    
-<section className="min-h-screen pt-24 flex items-center justify-center text-center px-6 relative">
+    <section className="min-h-screen pt-24 flex items-center justify-center text-center px-6 relative">
       {/* Background glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(168,85,247,0.15),transparent_60%)]" />
 
@@ -24,17 +25,22 @@ const HeroSection = () => {
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition flex items-center gap-2">
+          <button
+            onClick={() => navigate("/products")}
+            className="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition flex items-center gap-2"
+          >
             Explore Products <ArrowRight size={18} />
           </button>
 
-          <button className="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition flex items-center gap-2">
+          <button
+            onClick={() => navigate("/about#discord")}
+            className="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition flex items-center gap-2"
+          >
             Hire Coach for your Team <ArrowRight size={18} />
           </button>
         </div>
       </div>
     </section>
-    
   );
 };
 

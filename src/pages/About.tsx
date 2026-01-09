@@ -54,7 +54,7 @@ const About = () => {
       </section>
 
       {/* ================= DISCORD COMMUNITY ================= */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 mt-24">
+      <section id="discord" className="max-w-5xl mx-auto px-4 sm:px-6 mt-24">
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-white/10 rounded-2xl p-8 text-center">
           <MessageCircle className="mx-auto mb-4 text-purple-400" size={36} />
           <h2 className="text-2xl font-semibold mb-2">
