@@ -16,6 +16,11 @@ const offers = [
     title: "Team Trackers",
     desc: "Professional sheets to track performance, analyze results, and improve teamwork.",
   },
+  {
+    icon: <Map className="text-purple-400" />,
+    title: "High Quality Maps",
+    desc: "Get high quality freefire maps of different types like normal, coins and info maps.",
+  }
 ];
 
 const OfferSection = () => {

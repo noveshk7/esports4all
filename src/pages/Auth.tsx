@@ -8,7 +8,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // ✅ SINGLE SOURCE OF TRUTH FOR REDIRECT
+  // redirect handling
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
 
@@ -17,29 +17,24 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // ✅ AUTO REDIRECT AFTER LOGIN (EMAIL OR GOOGLE)
+  // auto redirect after login
   useEffect(() => {
     if (user) {
       navigate(redirectTo);
     }
   }, [user, navigate, redirectTo]);
 
-  // ✅ GOOGLE LOGIN (PRESERVE REDIRECT)
   const loginWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo:
-          window.location.origin + `/auth?redirect=${redirectTo}`,
+        redirectTo: `${window.location.origin}/auth?redirect=${redirectTo}`,
       },
     });
 
-    if (error) {
-      setError(error.message);
-    }
+    if (error) setError(error.message);
   };
 
-  // ✅ EMAIL LOGIN / SIGNUP
   const handleSubmit = async () => {
     try {
       setError("");
@@ -66,10 +61,10 @@ const Auth = () => {
     <main className="bg-black text-white min-h-screen">
       <Header />
 
-      <div className="pt-32 flex justify-center">
-        <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl p-6">
+      <div className="pt-28 px-4 sm:px-6 flex justify-center">
+        <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl p-5 sm:p-6">
 
-          <h2 className="text-xl font-semibold text-center">
+          <h2 className="text-lg sm:text-xl font-semibold text-center">
             {isLogin ? "Login" : "Sign Up"}
           </h2>
 
@@ -77,10 +72,10 @@ const Auth = () => {
             <p className="text-red-500 text-sm mt-3 text-center">{error}</p>
           )}
 
-          {/* ✅ GOOGLE LOGIN FIRST */}
+          {/* GOOGLE LOGIN */}
           <button
             onClick={loginWithGoogle}
-            className="w-full mb-4 py-2 border border-white/20 rounded-md flex items-center justify-center gap-2 hover:bg-white/10 transition"
+            className="w-full mt-5 py-3 border border-white/20 rounded-md flex items-center justify-center gap-2 hover:bg-white/10 transition text-sm sm:text-base"
           >
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"
@@ -90,7 +85,7 @@ const Auth = () => {
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-2 my-4">
+          <div className="flex items-center gap-2 my-5">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-xs text-gray-400">OR</span>
             <div className="flex-1 h-px bg-white/10" />
@@ -99,7 +94,7 @@ const Auth = () => {
           <input
             type="email"
             placeholder="Email"
-            className="w-full bg-black/60 border border-white/10 rounded px-3 py-2"
+            className="w-full bg-black/60 border border-white/10 rounded px-3 py-3 text-sm sm:text-base"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -107,14 +102,14 @@ const Auth = () => {
           <input
             type="password"
             placeholder="Password"
-            className="mt-3 w-full bg-black/60 border border-white/10 rounded px-3 py-2"
+            className="mt-3 w-full bg-black/60 border border-white/10 rounded px-3 py-3 text-sm sm:text-base"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
           <button
             onClick={handleSubmit}
-            className="mt-5 w-full py-2 bg-purple-600 rounded hover:bg-purple-700"
+            className="mt-5 w-full py-3 bg-purple-600 rounded hover:bg-purple-700 transition text-sm sm:text-base"
           >
             {isLogin ? "Login" : "Sign Up"}
           </button>

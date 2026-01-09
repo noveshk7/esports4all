@@ -7,13 +7,11 @@ import { useCart } from "../context/CartContext";
 
 const Products = () => {
   const { addItem } = useCart();
+
   const [pdfs, setPdfs] = useState<any[]>([]);
   const [sheets, setSheets] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"maps" | "pdfs" | "sheets">(
-    "maps"
-  );
-
   const [resources, setResources] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"maps" | "pdfs" | "sheets">("maps");
   const [selectedPlaces, setSelectedPlaces] = useState<Record<string, string>>(
     {}
   );
@@ -26,6 +24,10 @@ const Products = () => {
   }, {});
 
   useEffect(() => {
+    supabase.from("resources").select("*").eq("type", "pdf").then(({ data }) => {
+      setPdfs(data || []);
+    });
+
     supabase
       .from("resources")
       .select("*")
@@ -33,19 +35,7 @@ const Products = () => {
       .then(({ data }) => {
         setSheets(data || []);
       });
-  }, []);
 
-  useEffect(() => {
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("type", "pdf")
-      .then(({ data }) => {
-        setPdfs(data || []);
-      });
-  }, []);
-
-  useEffect(() => {
     supabase
       .from("resources")
       .select("*")
@@ -56,16 +46,10 @@ const Products = () => {
   }, []);
 
   const handleAddToCart = () => {
-    Object.entries(selectedPlaces).forEach(([mapName, resourceId]) => {
-      const resource = resources.find((r) => r.id === resourceId);
-      if (!resource) return;
-
-      addItem({
-        id: resource.id,
-        title: resource.title,
-        map: mapName,
-        price: resource.price,
-      });
+    Object.entries(selectedPlaces).forEach(([mapName, id]) => {
+      const res = resources.find((r) => r.id === id);
+      if (!res) return;
+      addItem({ id: res.id, title: res.title, map: mapName, price: res.price });
     });
   };
 
@@ -73,10 +57,8 @@ const Products = () => {
     .map((id) => resources.find((r) => r.id === id))
     .filter(Boolean);
 
-  const selectedCount = selectedResources.length;
-
   const totalPrice = selectedResources.reduce(
-    (sum: number, res: any) => sum + res.price,
+    (sum: number, r: any) => sum + r.price,
     0
   );
 
@@ -84,13 +66,13 @@ const Products = () => {
     <main className="bg-black text-white min-h-screen">
       <Header />
 
-      <section className="pt-28 px-6 text-center">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+      {/* HERO */}
+      <section className="pt-28 px-4 sm:px-6 text-center">
+        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
           Premium Resources
         </h1>
-        <p className="mt-3 text-gray-400">
-          Professional esports resources to elevate your gameplay and team
-          performance
+        <p className="mt-3 text-gray-400 text-sm sm:text-base">
+          Professional esports resources to elevate your gameplay
         </p>
 
         <div className="mt-8">
@@ -98,11 +80,10 @@ const Products = () => {
         </div>
       </section>
 
-      {/* ROTATION MAPS SECTION */}
-
+      {/* MAPS */}
       {activeTab === "maps" && (
-        <section className="mt-16 px-6">
-          <h2 className="text-center text-2xl font-semibold">
+        <section className="mt-12 px-4 sm:px-6">
+          <h2 className="text-center text-xl sm:text-2xl font-semibold">
             Rotation Path Bundles
           </h2>
 
@@ -110,101 +91,81 @@ const Products = () => {
             Select one drop location from each map
           </p>
 
-          {Object.keys(groupedByMap).length === 0 ? (
-            <p className="text-center text-gray-500 mt-8">
-              No rotation maps available yet.
-            </p>
-          ) : (
-            <div className="mt-10 max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-xl p-6 space-y-6">
-              {Object.entries(groupedByMap).map(([mapName, places]: any) => (
-                <div key={mapName}>
-                  <label className="block text-sm font-medium mb-2">
-                    {mapName}
-                  </label>
-
-                  <select
-                    value={selectedPlaces[mapName] || ""}
-                    onChange={(e) =>
-                      setSelectedPlaces((prev) => ({
-                        ...prev,
-                        [mapName]: e.target.value,
-                      }))
-                    }
-                    className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-                  >
-                    <option value="">Select drop location</option>
-
-                    {places.map((place: any) => (
-                      <option key={place.id} value={place.id}>
-                        {place.title} – ₹{place.price}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-
-              {/* SUMMARY BAR */}
-
-              <div className="mt-6 flex items-center justify-between gap-4 max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-xl px-6 py-4">
-                <div>
-                  <p className="text-sm text-gray-400">
-                    {selectedCount} map selected
-                  </p>
-                  <p className="text-2xl font-semibold">₹{totalPrice}</p>
-                </div>
-
-                <button
-                  onClick={handleAddToCart}
-                  disabled={selectedCount === 0}
-                  className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-8 py-3 rounded-xl font-medium transition"
+          <div className="mt-8 max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 space-y-6">
+            {Object.entries(groupedByMap).map(([map, places]: any) => (
+              <div key={map}>
+                <label className="block text-sm mb-2">{map}</label>
+                <select
+                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
+                  value={selectedPlaces[map] || ""}
+                  onChange={(e) =>
+                    setSelectedPlaces((p) => ({
+                      ...p,
+                      [map]: e.target.value,
+                    }))
+                  }
                 >
-                  Add to Cart
-                </button>
+                  <option value="">Select drop location</option>
+                  {places.map((p: any) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} – ₹{p.price}
+                    </option>
+                  ))}
+                </select>
               </div>
+            ))}
+
+            {/* SUMMARY */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/5 border border-white/10 rounded-xl px-4 py-4">
+              <div>
+                <p className="text-sm text-gray-400">
+                  {selectedResources.length} selected
+                </p>
+                <p className="text-xl font-semibold">₹{totalPrice}</p>
+              </div>
+
+              <button
+                onClick={handleAddToCart}
+                disabled={selectedResources.length === 0}
+                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-6 py-3 rounded-xl"
+              >
+                Add to Cart
+              </button>
             </div>
-          )}
+          </div>
         </section>
       )}
 
-      {/* PDFS SECTION */}
-
+      {/* PDFS */}
       {activeTab === "pdfs" && (
-        <section className="mt-16 px-6">
-          <h2 className="text-center text-2xl font-semibold">
+        <section className="mt-12 px-4 sm:px-6">
+          <h2 className="text-center text-xl sm:text-2xl font-semibold">
             Strategy Guides
           </h2>
 
-          <p className="text-center text-gray-400 mt-2 text-sm">
-            In-depth PDFs covering advanced tactics and techniques
-          </p>
-
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {pdfs.map((pdf) => (
               <div
                 key={pdf.id}
-                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-purple-500/40 transition"
+                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
               >
-                {/* Thumbnail */}
                 {pdf.thumbnail_url && (
                   <img
                     src={pdf.thumbnail_url}
-                    alt={pdf.title}
-                    className="h-52 w-full object-cover"
+                    className="h-48 w-full object-cover"
                   />
                 )}
 
                 <div className="p-4">
-                  <h3 className="font-medium text-lg">{pdf.title}</h3>
-
+                  <h3 className="font-medium">{pdf.title}</h3>
                   <p className="text-sm text-gray-400 mt-1">
                     {pdf.description}
                   </p>
 
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex justify-between items-center">
                     <span className="text-purple-400 font-semibold">
                       ₹{pdf.price}
                     </span>
-
                     <button
                       onClick={() =>
                         addItem({
@@ -214,9 +175,9 @@ const Products = () => {
                           price: pdf.price,
                         })
                       }
-                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm transition"
+                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
                     >
-                      Add to Cart
+                      Add
                     </button>
                   </div>
                 </div>
@@ -226,71 +187,56 @@ const Products = () => {
         </section>
       )}
 
-      {/* SHEETS SECTION */}
-
+      {/* SHEETS */}
       {activeTab === "sheets" && (
-        <section className="mt-16 px-6">
-          <h2 className="text-center text-2xl font-semibold">Team Resources</h2>
+        <section className="mt-12 px-4 sm:px-6">
+          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+            Team Resources
+          </h2>
 
-          <p className="text-center text-gray-400 mt-2 text-sm">
-            Professional tracking and analysis tools for teams
-          </p>
-
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {sheets.map((sheet) => (
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {sheets.map((s) => (
               <div
-                key={sheet.id}
-                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-purple-500/40 transition"
+                key={s.id}
+                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
               >
-                {/* Thumbnail */}
-                {sheet.thumbnail_url && (
+                {s.thumbnail_url && (
                   <img
-                    src={sheet.thumbnail_url}
-                    alt={sheet.title}
-                    className="h-52 w-full object-cover"
+                    src={s.thumbnail_url}
+                    className="h-48 w-full object-cover"
                   />
                 )}
 
                 <div className="p-4">
-                  <h3 className="font-medium text-lg">{sheet.title}</h3>
-
+                  <h3 className="font-medium">{s.title}</h3>
                   <p className="text-sm text-gray-400 mt-1">
-                    {sheet.description}
+                    {s.description}
                   </p>
 
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex justify-between items-center">
                     <span className="text-purple-400 font-semibold">
-                      ₹{sheet.price}
+                      ₹{s.price}
                     </span>
-
                     <button
                       onClick={() =>
                         addItem({
-                          id: sheet.id,
-                          title: sheet.title,
+                          id: s.id,
+                          title: s.title,
                           map: "Sheet",
-                          price: sheet.price,
+                          price: s.price,
                         })
                       }
-                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm transition"
+                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
                     >
-                      Add to Cart
+                      Add
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
-          {sheets.length === 0 && (
-            <p className="text-center text-gray-500 mt-12">
-              No sheets available yet.
-            </p>
-          )}
         </section>
       )}
-
-      {/* INFO MAPS SECTION */}
 
       <Footer />
     </main>

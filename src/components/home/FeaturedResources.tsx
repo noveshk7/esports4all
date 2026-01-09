@@ -8,9 +8,21 @@ const FeaturedResources = () => {
       </h2>
 
       <div className="mt-14 grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        <ProductCard title="Bermuda Rotation Paths" price={599} />
-        <ProductCard title="All-in-One Esports PDF" price={199} />
-        <ProductCard title="Team Performance Tracker" price={49} />
+        <ProductCard
+          title="Rotation Path Bundle"
+          price={599}
+          image="/images/rotation-cover.jpg"
+        />
+        <ProductCard
+          title="Rotation Path Bundle"
+          price={599}
+          image="/images/rotation-cover.jpg"
+        />
+        <ProductCard
+          title="Rotation Path Bundle"
+          price={599}
+          image="/images/rotation-cover.jpg"
+        />
       </div>
     </section>
   );

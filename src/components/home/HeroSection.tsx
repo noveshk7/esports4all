@@ -15,7 +15,7 @@ const HeroSection = () => {
 
         <h1 className="text-4xl md:text-6xl font-bold leading-tight">
           Master Free Fire Esports <br />
-          <span className="text-purple-400">with Coach Selzer</span>
+          <span className="text-purple-400">with ESPORTS4ALL</span>
         </h1>
 
         <p className="mt-6 text-gray-400 max-w-2xl mx-auto">
@@ -28,8 +28,8 @@ const HeroSection = () => {
             Explore Products <ArrowRight size={18} />
           </button>
 
-          <button className="px-6 py-3 rounded-lg border border-gray-700 hover:border-purple-500 transition">
-            Hire Me for Coaching
+          <button className="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition flex items-center gap-2">
+            Hire Coach for your Team <ArrowRight size={18} />
           </button>
         </div>
       </div>
