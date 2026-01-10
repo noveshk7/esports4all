@@ -1,15 +1,111 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useCart } from "../context/CartContext";
 import { Trash2 } from "lucide-react";
+import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { openRazorpay } from "../lib/razorpay";
+import { supabase } from "../lib/supabase";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { items, removeItem, total, clearCart } = useCart();
 
-  const { items, removeItem, total } = useCart();
+  const handlePayment = async () => {
+    if (!user) {
+      navigate("/auth?redirect=/cart");
+      return;
+    }
+
+    try {
+      // 1️⃣ Create Razorpay order
+      const res = await fetch("http://127.0.0.1:5000/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: total }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Order creation failed");
+      }
+
+      const order = await res.json();
+
+      // 2️⃣ Open Razorpay Checkout
+      openRazorpay({
+        order,
+        user,
+        onSuccess: async (response: any) => {
+          try {
+            console.log("Payment success:", response);
+
+            // 🔐 VERIFY PAYMENT
+            const verifyRes = await fetch(
+              "http://127.0.0.1:5000/verify-payment",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            if (!verifyRes.ok) {
+              alert("Payment verification request failed");
+              return;
+            }
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyData.success) {
+              alert("Payment verification failed");
+              return;
+            }
+
+            // 💾 SAVE PURCHASES
+            const rows = items.map((item) => ({
+              user_id: user.id,
+              resource_id: item.id,
+              amount: item.price,
+              payment_id: response.razorpay_payment_id,
+              order_id: response.razorpay_order_id,
+            }));
+
+            const { error } = await supabase
+  .from("purchases")
+  .upsert(rows, {
+    onConflict: "user_id,resource_id",
+    ignoreDuplicates: true,
+  });
+
+if (error) {
+  console.error("SUPABASE UPSERT ERROR:", error);
+  alert("Payment done, but purchase could not be saved.");
+  return;
+}
+
+
+
+            // 🧹 CLEAR CART
+            clearCart();
+
+            // 🚀 REDIRECT
+            navigate("/my-resources");
+          } catch (err) {
+            console.error("POST PAYMENT ERROR:", err);
+            alert("Something went wrong after payment");
+          }
+        },
+      });
+    } catch (err) {
+      console.error("PAYMENT ERROR:", err);
+      alert("Payment failed. Check console.");
+    }
+  };
 
   return (
     <main className="bg-black text-white min-h-screen">
@@ -67,17 +163,11 @@ const Cart = () => {
             </div>
 
             <button
-              onClick={() => {
-                if (!user) {
-                  navigate("/auth?redirect=/cart");
-                } else {
-                  // payment will be here later
-                  alert("Proceed to payment");
-                }
-              }}
-              className="mt-6 w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition"
+              onClick={handlePayment}
+              disabled={items.length === 0}
+              className="mt-6 w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition"
             >
-              {user ? "Proceed to Pay" : "Login to Pay"}
+              {user ? `Pay ₹${total}` : "Login to Pay"}
             </button>
           </div>
         </div>

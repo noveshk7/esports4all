@@ -20,26 +20,30 @@ const MyResources = () => {
         .from("purchases")
         .select(
           `
-          id,
-          resources (
-            id,
-            title,
-            price,
-            type,
-            thumbnail_url,
-            file_url,
-            map_name
-          )
-        `
+    id,
+    resource:resources (
+      id,
+      title,
+      price,
+      type,
+      thumbnail_url,
+      file_url,
+      map_name
+    )
+  `
         )
         .eq("user_id", user.id);
 
       if (!error && data) {
-        const mapped = data.map((p: any) => ({
-          ...p.resources,
-          purchased: true,
-        }));
+        const mapped = data
+          .filter((p: any) => p.resource)
+          .map((p: any) => ({
+            ...p.resource,
+            purchased: true,
+          }));
+
         setResources(mapped);
+        console.log("Mapped resources:", mapped);
       }
 
       setLoading(false);
@@ -48,18 +52,31 @@ const MyResources = () => {
     fetchMyResources();
   }, [user]);
 
-  const downloadResource = async (filePath: string) => {
-    const { data, error } = await supabase.storage
-      .from("resources")
-      .createSignedUrl(filePath, 60);
+const getFileExtension = (path: string) => {
+  const cleanPath = path.split("?")[0];
+  return cleanPath.substring(cleanPath.lastIndexOf(".") + 1);
+};
 
-    if (error) {
-      alert("Download failed");
-      return;
-    }
+const downloadResource = async (filePath: string, title: string) => {
+  const ext = getFileExtension(filePath);
 
-    window.open(data.signedUrl, "_blank");
-  };
+  const { data, error } = await supabase.storage
+    .from("resources")
+    .createSignedUrl(filePath, 300, {
+      download: `${title}.${ext}`, // force attachment
+    });
+
+  if (error || !data?.signedUrl) {
+    alert("Download failed");
+    return;
+  }
+
+  // ✅ OPEN IN NEW TAB (STABLE)
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+};
+
+
+
 
   return (
     <main className="bg-black min-h-screen text-white">
@@ -80,9 +97,7 @@ const MyResources = () => {
         {loading ? (
           <p className="text-gray-400 text-sm">Loading...</p>
         ) : resources.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            No resources purchased yet.
-          </p>
+          <p className="text-gray-500 text-sm">No resources purchased yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {resources.map((res) => (
@@ -121,8 +136,8 @@ const MyResources = () => {
                   </p>
 
                   <button
-                    onClick={() => downloadResource(res.file_url)}
-                    className="mt-4 w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 transition py-3 rounded-lg text-sm"
+                    onClick={() => downloadResource(res.file_url, res.title)}
+                    className="mt-4 w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 transition py-2 rounded-lg text-sm"
                   >
                     <Download size={16} />
                     Download
