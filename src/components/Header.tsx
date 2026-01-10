@@ -25,20 +25,19 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <div
-  onClick={() => navigate("/")}
-  className="flex items-center gap-2 cursor-pointer"
->
-  <img
-    src="/src/assets/e4a.jpeg"
-    alt="Coach Selzer Logo"
-    className="h-14 w-14 object-contain"
-  />
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <img
+              src="/src/assets/e4a.jpeg"
+              alt="Coach Selzer Logo"
+              className="h-14 w-14 object-contain"
+            />
 
-  <span className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-    ESPORTS4ALL
-  </span>
-</div>
-
+            <span className="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              ESPORTS4ALL
+            </span>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8 text-sm text-gray-300">
@@ -92,7 +91,10 @@ const Header = () => {
                   {role === "admin" ? "Admin" : "User"}
                 </span>
                 <button
-                  onClick={logout}
+                  onClick={async () => {
+                    await logout();
+                    navigate("/"); // 🔥 optional but recommended
+                  }}
                   className="text-sm text-gray-300 hover:text-white"
                 >
                   Logout

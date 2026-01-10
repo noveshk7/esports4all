@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import { supabase } from "../lib/supabase";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLocation } from "react-router-dom";
 
 const Auth = () => {
   const navigate = useNavigate();
+const location = useLocation();
+
+  
   const { user } = useAuth();
 
   // redirect handling
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+const redirectTo = (location.state as any)?.from || "/";
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -19,10 +22,11 @@ const Auth = () => {
 
   // auto redirect after login
   useEffect(() => {
-    if (user) {
-      navigate(redirectTo);
-    }
-  }, [user, navigate, redirectTo]);
+  if (user) {
+    navigate(redirectTo, { replace: true });
+  }
+}, [user, navigate, redirectTo]);
+
 
   const loginWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
