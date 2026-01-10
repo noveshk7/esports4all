@@ -28,7 +28,7 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth?redirect=${redirectTo}`,
+        redirectTo: `${window.location.origin}/auth`,
       },
     });
 
@@ -63,7 +63,6 @@ const Auth = () => {
 
       <div className="pt-28 px-4 sm:px-6 flex justify-center">
         <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl p-5 sm:p-6">
-
           <h2 className="text-lg sm:text-xl font-semibold text-center">
             {isLogin ? "Login" : "Sign Up"}
           </h2>
@@ -122,7 +121,6 @@ const Auth = () => {
               ? "Don't have an account? Sign Up"
               : "Already have an account? Login"}
           </p>
-
         </div>
       </div>
     </main>
