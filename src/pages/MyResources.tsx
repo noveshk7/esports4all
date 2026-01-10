@@ -4,51 +4,56 @@ import Footer from "../components/Footer";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const MyResources = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+  if (!user) {
+    navigate("/auth", { replace: true });
+    return;
+  }
 
-    const fetchMyResources = async () => {
-      setLoading(true);
+  const fetchMyResources = async () => {
+    setLoading(true);
 
-      const { data, error } = await supabase
-        .from("purchases")
-        .select(
-          `
+    const { data, error } = await supabase
+      .from("purchases")
+      .select(`
+        id,
+        resource:resources (
           id,
-          resource:resources (
-            id,
-            title,
-            price,
-            type,
-            thumbnail_url,
-            file_url,
-            map_name
-          )
-        `
+          title,
+          price,
+          type,
+          thumbnail_url,
+          file_url,
+          map_name
         )
-        .eq("user_id", user.id);
+      `)
+      .eq("user_id", user.id);
 
-      if (!error && data) {
-        const mapped = data
-          .filter((p: any) => p.resource)
-          .map((p: any) => ({
-            ...p.resource,
-          }));
+    if (!error && data) {
+      const mapped = data
+        .filter((p: any) => p.resource)
+        .map((p: any) => ({
+          ...p.resource,
+          purchased: true,
+        }));
 
-        setResources(mapped);
-      }
+      setResources(mapped);
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
-    fetchMyResources();
-  }, [user]);
+  fetchMyResources();
+}, [user, navigate]);
+
 
  const getFileExtension = (path: string) => {
   const cleanPath = path.split("?")[0];

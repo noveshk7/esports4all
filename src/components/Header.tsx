@@ -93,7 +93,7 @@ const Header = () => {
                 <button
                   onClick={async () => {
                     await logout();
-                    navigate("/"); // 🔥 optional but recommended
+                    window.location.href = "/"; // 🔥 MOBILE SAFE
                   }}
                   className="text-sm text-gray-300 hover:text-white"
                 >
