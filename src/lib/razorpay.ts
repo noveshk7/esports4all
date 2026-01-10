@@ -15,8 +15,8 @@ export const openRazorpay = ({
     description: "Purchase Resources",
     order_id: order.id,
 
-    handler: function (response: any) {
-      onSuccess(response); // ✅ response passed correctly
+    handler: (response: any) => {
+      onSuccess(response); // ✅ keep as-is
     },
 
     prefill: {
@@ -27,6 +27,11 @@ export const openRazorpay = ({
       color: "#7c3aed",
     },
   };
+
+  if (!(window as any).Razorpay) {
+    alert("Razorpay SDK not loaded");
+    return;
+  }
 
   const rzp = new (window as any).Razorpay(options);
   rzp.open();

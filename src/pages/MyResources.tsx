@@ -20,17 +20,17 @@ const MyResources = () => {
         .from("purchases")
         .select(
           `
-    id,
-    resource:resources (
-      id,
-      title,
-      price,
-      type,
-      thumbnail_url,
-      file_url,
-      map_name
-    )
-  `
+          id,
+          resource:resources (
+            id,
+            title,
+            price,
+            type,
+            thumbnail_url,
+            file_url,
+            map_name
+          )
+        `
         )
         .eq("user_id", user.id);
 
@@ -39,11 +39,9 @@ const MyResources = () => {
           .filter((p: any) => p.resource)
           .map((p: any) => ({
             ...p.resource,
-            purchased: true,
           }));
 
         setResources(mapped);
-        console.log("Mapped resources:", mapped);
       }
 
       setLoading(false);
@@ -52,92 +50,65 @@ const MyResources = () => {
     fetchMyResources();
   }, [user]);
 
-const getFileExtension = (path: string) => {
-  const cleanPath = path.split("?")[0];
-  return cleanPath.substring(cleanPath.lastIndexOf(".") + 1);
-};
+  const downloadResource = async (filePath: string, title: string) => {
+    const { data, error } = await supabase.storage
+      .from("resources")
+      .createSignedUrl(filePath, 300);
 
-const downloadResource = async (filePath: string, title: string) => {
-  const ext = getFileExtension(filePath);
+    if (error || !data?.signedUrl) {
+      alert("Download failed");
+      return;
+    }
 
-  const { data, error } = await supabase.storage
-    .from("resources")
-    .createSignedUrl(filePath, 300, {
-      download: `${title}.${ext}`, // force attachment
-    });
-
-  if (error || !data?.signedUrl) {
-    alert("Download failed");
-    return;
-  }
-
-  // ✅ OPEN IN NEW TAB (STABLE)
-  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-};
-
-
-
+    // ✅ Google Drive–style download
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <main className="bg-black min-h-screen text-white">
       <Header />
 
-      {/* HERO */}
-      <section className="pt-28 px-4 sm:px-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-          My Resources
-        </h1>
-        <p className="mt-2 text-gray-400 text-sm sm:text-base">
-          Access all your purchased coaching materials
+      <section className="pt-28 px-6 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-purple-400">My Resources</h1>
+        <p className="text-gray-400 mt-2">
+          Access all your purchased resources
         </p>
       </section>
 
-      {/* CONTENT */}
-      <section className="mt-10 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section className="mt-10 px-6 max-w-7xl mx-auto">
         {loading ? (
-          <p className="text-gray-400 text-sm">Loading...</p>
+          <p className="text-gray-400">Loading...</p>
         ) : resources.length === 0 ? (
-          <p className="text-gray-500 text-sm">No resources purchased yet.</p>
+          <p className="text-gray-500">No resources purchased yet.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {resources.map((res) => (
               <div
                 key={res.id}
                 className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
               >
-                {/* Thumbnail */}
-                <div className="relative h-40 sm:h-44 bg-gradient-to-br from-purple-900/40 to-blue-900/40 flex items-center justify-center">
+                <div className="h-44 bg-black/40 flex items-center justify-center">
                   {res.thumbnail_url ? (
                     <img
                       src={res.thumbnail_url}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-white/40 text-xl">📘</span>
                   )}
-
-                  <span className="absolute top-3 right-3 bg-green-600 text-xs px-3 py-1 rounded-full">
-                    Purchased
-                  </span>
                 </div>
 
-                {/* Info */}
                 <div className="p-4">
-                  <span className="text-xs text-gray-400 uppercase">
-                    {res.type === "rotation-map" ? "Map" : res.type}
-                  </span>
-
-                  <h3 className="mt-1 font-medium text-sm sm:text-base">
-                    {res.title}
-                  </h3>
-
-                  <p className="text-xs text-gray-400 mt-1">
-                    Paid: ₹{res.price}
+                  <h3 className="font-medium">{res.title}</h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Paid ₹{res.price}
                   </p>
 
                   <button
-                    onClick={() => downloadResource(res.file_url, res.title)}
-                    className="mt-4 w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 transition py-2 rounded-lg text-sm"
+                    onClick={() =>
+                      downloadResource(res.file_url, res.title)
+                    }
+                    className="mt-4 w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 py-2 rounded-lg text-sm"
                   >
                     <Download size={16} />
                     Download

@@ -19,8 +19,8 @@ const Cart = () => {
     }
 
     try {
-      // 1️⃣ Create Razorpay order
-      const res = await fetch("http://127.0.0.1:5000/create-order", {
+      // 1️⃣ Create Razorpay order (Vercel API)
+      const res = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: total }),
@@ -40,33 +40,29 @@ const Cart = () => {
           try {
             console.log("Payment success:", response);
 
-            // 🔐 VERIFY PAYMENT
-            const verifyRes = await fetch(
-              "http://127.0.0.1:5000/verify-payment",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              }
-            );
+            // 3️⃣ VERIFY PAYMENT (Vercel API)
+            const verifyRes = await fetch("/api/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
 
             if (!verifyRes.ok) {
-              alert("Payment verification request failed");
-              return;
-            }
-
-            const verifyData = await verifyRes.json();
-
-            if (!verifyData.success) {
               alert("Payment verification failed");
               return;
             }
 
-            // 💾 SAVE PURCHASES
+            const verifyData = await verifyRes.json();
+            if (!verifyData.success) {
+              alert("Invalid payment signature");
+              return;
+            }
+
+            // 4️⃣ SAVE PURCHASES (no duplicates)
             const rows = items.map((item) => ({
               user_id: user.id,
               resource_id: item.id,
@@ -75,35 +71,29 @@ const Cart = () => {
               order_id: response.razorpay_order_id,
             }));
 
-            const { error } = await supabase
-  .from("purchases")
-  .upsert(rows, {
-    onConflict: "user_id,resource_id",
-    ignoreDuplicates: true,
-  });
+            const { error } = await supabase.from("purchases").upsert(rows, {
+              onConflict: "user_id,resource_id",
+              ignoreDuplicates: true,
+            });
 
-if (error) {
-  console.error("SUPABASE UPSERT ERROR:", error);
-  alert("Payment done, but purchase could not be saved.");
-  return;
-}
+            if (error) {
+              console.error(error);
+              alert("Payment done, but saving failed");
+              return;
+            }
 
-
-
-            // 🧹 CLEAR CART
+            // 5️⃣ CLEAR + REDIRECT
             clearCart();
-
-            // 🚀 REDIRECT
             navigate("/my-resources");
           } catch (err) {
-            console.error("POST PAYMENT ERROR:", err);
+            console.error("Post-payment error:", err);
             alert("Something went wrong after payment");
           }
         },
       });
     } catch (err) {
-      console.error("PAYMENT ERROR:", err);
-      alert("Payment failed. Check console.");
+      console.error("Payment error:", err);
+      alert("Payment failed. Please try again.");
     }
   };
 
