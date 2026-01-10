@@ -50,19 +50,28 @@ const MyResources = () => {
     fetchMyResources();
   }, [user]);
 
-  const downloadResource = async (filePath: string, title: string) => {
-    const { data, error } = await supabase.storage
-      .from("resources")
-      .createSignedUrl(filePath, 300);
+ const getFileExtension = (path: string) => {
+  const cleanPath = path.split("?")[0];
+  return cleanPath.substring(cleanPath.lastIndexOf(".") + 1);
+};
 
-    if (error || !data?.signedUrl) {
-      alert("Download failed");
-      return;
-    }
+const downloadResource = async (filePath: string, title: string) => {
+  const ext = getFileExtension(filePath);
 
-    // ✅ Google Drive–style download
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-  };
+  const { data, error } = await supabase.storage
+    .from("resources")
+    .createSignedUrl(filePath, 300, {
+      download: `${title}.${ext}`, // ✅ title is USED here
+    });
+
+  if (error || !data?.signedUrl) {
+    alert("Download failed");
+    return;
+  }
+
+  window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+};
+
 
   return (
     <main className="bg-black min-h-screen text-white">
