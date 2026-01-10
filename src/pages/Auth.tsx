@@ -7,13 +7,13 @@ import { useLocation } from "react-router-dom";
 
 const Auth = () => {
   const navigate = useNavigate();
-const location = useLocation();
+  const location = useLocation();
 
-  
   const { user } = useAuth();
 
   // redirect handling
-const redirectTo = (location.state as any)?.from || "/";
+  const redirectTo = (location.state as any)?.from || "/";
+  const [username, setUsername] = useState("");
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -22,11 +22,10 @@ const redirectTo = (location.state as any)?.from || "/";
 
   // auto redirect after login
   useEffect(() => {
-  if (user) {
-    navigate(redirectTo, { replace: true });
-  }
-}, [user, navigate, redirectTo]);
-
+    if (user) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [user, navigate, redirectTo]);
 
   const loginWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -50,11 +49,21 @@ const redirectTo = (location.state as any)?.from || "/";
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
+
         if (error) throw error;
+
+        if (data.user) {
+          await supabase.from("profiles").insert({
+            id: data.user.id,
+            email: data.user.email,
+            username,
+            role: "user",
+          });
+        }
       }
     } catch (err: any) {
       setError(err.message);
@@ -93,6 +102,16 @@ const redirectTo = (location.state as any)?.from || "/";
             <span className="text-xs text-gray-400">OR</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
+
+          {!isLogin && (
+            <input
+              type="text"
+              placeholder="Username"
+              className="mb-3 w-full bg-black/60 border border-white/10 rounded px-3 py-2"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          )}
 
           <input
             type="email"

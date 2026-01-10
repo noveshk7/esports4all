@@ -2,10 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+html,
+body {
   overflow-x: hidden;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+@layer base {
+  html {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16.5px; /* 👈 slightly bigger than default */
+  }
+
+  body {
+    @apply text-gray-200;
+  }
+}
+
+@layer base {
+  h1 {
+    @apply text-4xl md:text-5xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-semibold;
+  }
+
+  h3 {
+    @apply text-xl font-semibold;
+  }
+
+  p {
+    @apply text-base md:text-lg;
+  }
 }
