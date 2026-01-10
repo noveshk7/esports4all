@@ -6,12 +6,96 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { openRazorpay } from "../lib/razorpay";
 import { supabase } from "../lib/supabase";
+import { useEffect, useState } from "react";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items, removeItem, total, clearCart } = useCart();
 
+  /* ---------------- PROMO STATES ---------------- */
+  const [promoCode, setPromoCode] = useState("");
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [promoError, setPromoError] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+
+  /* ---------------- FETCH ACTIVE COUPONS ---------------- */
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      const { data, error } = await supabase
+        .from("promo_codes")
+        .select("id, code, discount_percent, expires_at")
+        .eq("active", true);
+
+      if (!error && data) {
+        const valid = data.filter(
+          (c) => !c.expires_at || new Date(c.expires_at) > new Date()
+        );
+        setAvailableCoupons(valid);
+      }
+    };
+
+    fetchCoupons();
+  }, []);
+
+  /* ---------------- APPLY PROMO ---------------- */
+  const applyPromo = async (codeOverride?: string) => {
+    if (!user) {
+      setPromoError("Login required to apply promo");
+      return;
+    }
+
+    const code = (codeOverride ?? promoCode).trim().toUpperCase();
+
+    const { data: promo, error } = await supabase
+      .from("promo_codes")
+      .select("*")
+      .eq("code", code)
+      .eq("active", true)
+      .single();
+
+    if (error || !promo) {
+      setPromoError("Invalid promo code");
+      setDiscountPercent(0);
+      setAppliedPromo(null);
+      return;
+    }
+
+    // ⏰ Expiry check
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+      setPromoError("Promo code expired");
+      setDiscountPercent(0);
+      setAppliedPromo(null);
+      return;
+    }
+
+    // 🔐 Per-user usage check
+    const { data: usage } = await supabase
+      .from("promo_usages")
+      .select("id")
+      .eq("promo_code_id", promo.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (usage) {
+      setPromoError("You already used this promo code");
+      setDiscountPercent(0);
+      setAppliedPromo(null);
+      return;
+    }
+
+    setPromoError("");
+    setPromoCode(promo.code);
+    setDiscountPercent(promo.discount_percent);
+    setAppliedPromo(promo);
+  };
+
+  /* ---------------- PRICE CALC ---------------- */
+  const discountAmount = Math.round((total * discountPercent) / 100);
+  const finalAmount = Math.max(total - discountAmount, 0);
+
+  /* ---------------- PAYMENT ---------------- */
   const handlePayment = async () => {
     if (!user) {
       navigate("/auth?redirect=/cart");
@@ -19,28 +103,24 @@ const Cart = () => {
     }
 
     try {
-      // 1️⃣ Create Razorpay order (Vercel API)
+      // 1️⃣ Create order (discounted)
       const res = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: total }),
+        body: JSON.stringify({ amount: finalAmount }),
       });
 
-      if (!res.ok) {
-        throw new Error("Order creation failed");
-      }
+      if (!res.ok) throw new Error("Order creation failed");
 
       const order = await res.json();
 
-      // 2️⃣ Open Razorpay Checkout
+      // 2️⃣ Razorpay
       openRazorpay({
         order,
         user,
         onSuccess: async (response: any) => {
           try {
-            console.log("Payment success:", response);
-
-            // 3️⃣ VERIFY PAYMENT (Vercel API)
+            // 3️⃣ Verify payment
             const verifyRes = await fetch("/api/verify-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -51,18 +131,13 @@ const Cart = () => {
               }),
             });
 
-            if (!verifyRes.ok) {
+            const verifyData = await verifyRes.json();
+            if (!verifyData.success) {
               alert("Payment verification failed");
               return;
             }
 
-            const verifyData = await verifyRes.json();
-            if (!verifyData.success) {
-              alert("Invalid payment signature");
-              return;
-            }
-
-            // 4️⃣ SAVE PURCHASES (no duplicates)
+            // 4️⃣ Save purchases
             const rows = items.map((item) => ({
               user_id: user.id,
               resource_id: item.id,
@@ -77,12 +152,19 @@ const Cart = () => {
             });
 
             if (error) {
-              console.error(error);
-              alert("Payment done, but saving failed");
+              alert("Payment done, but saving purchase failed");
               return;
             }
 
-            // 5️⃣ CLEAR + REDIRECT
+            // 5️⃣ Save promo usage
+            if (appliedPromo) {
+              await supabase.from("promo_usages").insert({
+                promo_code_id: appliedPromo.id,
+                user_id: user.id,
+              });
+            }
+
+            // 6️⃣ Clear + redirect
             clearCart();
             navigate("/my-resources");
           } catch (err) {
@@ -107,7 +189,7 @@ const Cart = () => {
         </h1>
 
         <div className="mt-10 grid md:grid-cols-3 gap-8">
-          {/* Cart Items */}
+          {/* CART ITEMS */}
           <div className="md:col-span-2 space-y-4">
             {items.map((item) => (
               <div
@@ -138,18 +220,68 @@ const Cart = () => {
             )}
           </div>
 
-          {/* Order Summary */}
+          {/* ORDER SUMMARY */}
           <div className="bg-white/5 border border-white/10 rounded-xl p-6 h-fit">
             <h2 className="text-lg font-semibold">Order Summary</h2>
 
             <div className="mt-4 text-sm text-gray-400 flex justify-between">
-              <span>Items ({items.length})</span>
+              <span>Subtotal</span>
               <span>₹{total}</span>
             </div>
 
-            <div className="mt-4 flex justify-between font-semibold">
+            {discountPercent > 0 && (
+              <div className="mt-2 text-sm text-green-400 flex justify-between">
+                <span>Discount ({discountPercent}%)</span>
+                <span>- ₹{discountAmount}</span>
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-between font-semibold text-lg">
               <span>Total</span>
-              <span>₹{total}</span>
+              <span>₹{finalAmount}</span>
+            </div>
+
+            {/* AVAILABLE COUPONS */}
+            {availableCoupons.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs text-gray-400 mb-2">
+                  Available Coupons
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {availableCoupons.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => applyPromo(c.code)}
+                      className="px-3 py-1 text-xs rounded-full border border-purple-500/40 text-purple-400 hover:bg-purple-600 hover:text-white transition"
+                    >
+                      {c.code} ({c.discount_percent}% OFF)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PROMO INPUT */}
+            <div className="mt-4">
+              <label className="text-sm text-gray-400">Promo Code</label>
+              <div className="mt-2 flex gap-2">
+                <input
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Enter code"
+                  className="flex-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={() => applyPromo()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm"
+                >
+                  Apply
+                </button>
+              </div>
+
+              {promoError && (
+                <p className="text-xs text-red-400 mt-2">{promoError}</p>
+              )}
             </div>
 
             <button
@@ -157,7 +289,7 @@ const Cart = () => {
               disabled={items.length === 0}
               className="mt-6 w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition"
             >
-              {user ? `Pay ₹${total}` : "Login to Pay"}
+              {user ? `Pay ₹${finalAmount}` : "Login to Pay"}
             </button>
           </div>
         </div>

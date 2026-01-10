@@ -9,10 +9,11 @@ export type CartItem = {
 
 type CartContextType = {
   items: CartItem[];
-  addItem: (item: CartItem) => void;
+  addItem: (item: CartItem) => boolean; // ✅ returns success/failure
   removeItem: (id: string) => void;
   clearCart: () => void;
   total: number;
+  isInCart: (id: string) => boolean;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -20,7 +21,7 @@ const CartContext = createContext<CartContextType | null>(null);
 const CART_KEY = "e4a_cart_items";
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  // ✅ LAZY INITIALIZATION (CRITICAL FIX)
+  // ✅ Lazy init from localStorage
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const stored = localStorage.getItem(CART_KEY);
@@ -30,13 +31,24 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   });
 
-  // ✅ SAVE TO LOCALSTORAGE ON CHANGE
+  // ✅ Persist cart
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
   }, [items]);
 
-  const addItem = (item: CartItem) => {
+  // ✅ Check if item already exists
+  const isInCart = (id: string) => {
+    return items.some((item) => item.id === id);
+  };
+
+  // ✅ Add item safely (NO duplicates)
+  const addItem = (item: CartItem): boolean => {
+    if (items.some((i) => i.id === item.id)) {
+      return false; // ❌ already in cart
+    }
+
     setItems((prev) => [...prev, item]);
+    return true; // ✅ added successfully
   };
 
   const removeItem = (id: string) => {
@@ -52,7 +64,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, clearCart, total }}
+      value={{ items, addItem, removeItem, clearCart, total, isInCart }}
     >
       {children}
     </CartContext.Provider>

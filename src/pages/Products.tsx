@@ -6,12 +6,18 @@ import { supabase } from "../lib/supabase";
 import { useCart } from "../context/CartContext";
 
 const Products = () => {
-  const { addItem } = useCart();
+  const { addItem, isInCart } = useCart();
 
   const [pdfs, setPdfs] = useState<any[]>([]);
   const [sheets, setSheets] = useState<any[]>([]);
   const [resources, setResources] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"maps" | "pdfs" | "sheets">("maps");
+  const [infoMaps, setInfoMaps] = useState<any[]>([]);
+  const [hqMaps, setHqMaps] = useState<any[]>([]);
+
+  const [activeTab, setActiveTab] = useState<
+    "maps" | "pdfs" | "sheets" | "info-maps" | "hq-maps"
+  >("maps");
+
   const [selectedPlaces, setSelectedPlaces] = useState<Record<string, string>>(
     {}
   );
@@ -24,9 +30,13 @@ const Products = () => {
   }, {});
 
   useEffect(() => {
-    supabase.from("resources").select("*").eq("type", "pdf").then(({ data }) => {
-      setPdfs(data || []);
-    });
+    supabase
+      .from("resources")
+      .select("*")
+      .eq("type", "pdf")
+      .then(({ data }) => {
+        setPdfs(data || []);
+      });
 
     supabase
       .from("resources")
@@ -43,13 +53,38 @@ const Products = () => {
       .then(({ data }) => {
         setResources(data || []);
       });
+
+    supabase
+      .from("resources")
+      .select("*")
+      .eq("type", "info-map")
+      .then(({ data }) => {
+        setInfoMaps(data || []);
+      });
+
+    supabase
+      .from("resources")
+      .select("*")
+      .eq("type", "hq-map")
+      .then(({ data }) => {
+        setHqMaps(data || []);
+      });
   }, []);
 
   const handleAddToCart = () => {
     Object.entries(selectedPlaces).forEach(([mapName, id]) => {
       const res = resources.find((r) => r.id === id);
       if (!res) return;
-      addItem({ id: res.id, title: res.title, map: mapName, price: res.price });
+
+      // ✅ Skip if already in cart
+      if (isInCart(res.id)) return;
+
+      addItem({
+        id: res.id,
+        title: res.title,
+        map: mapName,
+        price: res.price,
+      });
     });
   };
 
@@ -177,7 +212,7 @@ const Products = () => {
                       }
                       className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
                     >
-                      Add
+                      Add to Cart
                     </button>
                   </div>
                 </div>
@@ -209,9 +244,7 @@ const Products = () => {
 
                 <div className="p-4">
                   <h3 className="font-medium">{s.title}</h3>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {s.description}
-                  </p>
+                  <p className="text-sm text-gray-400 mt-1">{s.description}</p>
 
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-purple-400 font-semibold">
@@ -228,7 +261,7 @@ const Products = () => {
                       }
                       className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
                     >
-                      Add
+                      Add to Cart
                     </button>
                   </div>
                 </div>
@@ -237,6 +270,129 @@ const Products = () => {
           </div>
         </section>
       )}
+
+      {/* INFO MAPS */}
+{activeTab === "info-maps" && (
+  <section className="mt-12 px-4 sm:px-6">
+    <h2 className="text-center text-xl sm:text-2xl font-semibold">
+      Info Maps
+    </h2>
+
+    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      {infoMaps.map((item) => {
+        const alreadyAdded = isInCart(item.id);
+
+        return (
+          <div
+            key={item.id}
+            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+          >
+            {item.thumbnail_url && (
+              <img
+                src={item.thumbnail_url}
+                className="h-48 w-full object-cover"
+              />
+            )}
+
+            <div className="p-4">
+              <h3 className="font-medium">{item.title}</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                {item.description}
+              </p>
+
+              <div className="mt-4 flex justify-between items-center">
+                <span className="text-purple-400 font-semibold">
+                  ₹{item.price}
+                </span>
+
+                <button
+                  disabled={alreadyAdded}
+                  onClick={() =>
+                    addItem({
+                      id: item.id,
+                      title: item.title,
+                      map: "Info Map",
+                      price: item.price,
+                    })
+                  }
+                  className={`px-4 py-2 rounded-lg text-sm ${
+                    alreadyAdded
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  }`}
+                >
+                  {alreadyAdded ? "Added" : "Add to Cart"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+)}
+
+{/* HQ MAPS */}
+{activeTab === "hq-maps" && (
+  <section className="mt-12 px-4 sm:px-6">
+    <h2 className="text-center text-xl sm:text-2xl font-semibold">
+      HQ Maps
+    </h2>
+
+    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      {hqMaps.map((item) => {
+        const alreadyAdded = isInCart(item.id);
+
+        return (
+          <div
+            key={item.id}
+            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+          >
+            {item.thumbnail_url && (
+              <img
+                src={item.thumbnail_url}
+                className="h-48 w-full object-cover"
+              />
+            )}
+
+            <div className="p-4">
+              <h3 className="font-medium">{item.title}</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                {item.description}
+              </p>
+
+              <div className="mt-4 flex justify-between items-center">
+                <span className="text-purple-400 font-semibold">
+                  ₹{item.price}
+                </span>
+
+                <button
+                  disabled={alreadyAdded}
+                  onClick={() =>
+                    addItem({
+                      id: item.id,
+                      title: item.title,
+                      map: "HQ Map",
+                      price: item.price,
+                    })
+                  }
+                  className={`px-4 py-2 rounded-lg text-sm ${
+                    alreadyAdded
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  }`}
+                >
+                  {alreadyAdded ? "Added" : "Add to Cart"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+)}
+
 
       <Footer />
     </main>
