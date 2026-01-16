@@ -105,10 +105,17 @@ const Cart = () => {
     try {
       // 1️⃣ Create order (discounted)
       const res = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: finalAmount }),
-      });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    userId: user.id,
+    items: items.map((item) => ({
+      id: item.id,
+    })),
+    promoCode: appliedPromo?.code || null,
+  }),
+});
+
 
       if (!res.ok) throw new Error("Order creation failed");
 
