@@ -31,10 +31,7 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: "Invalid resources" });
     }
 
-    let totalAmount = resources.reduce(
-      (sum, r) => sum + r.price,
-      0
-    );
+    let totalAmount = resources.reduce((sum, r) => sum + r.price, 0);
 
     /* 🎟️ 2️⃣ Apply promo securely */
     if (promoCode) {
@@ -69,7 +66,7 @@ export default async function handler(req: any, res: any) {
     const order = await razorpay.orders.create({
       amount: totalAmount * 100,
       currency: "INR",
-      receipt: `order_${userId}_${Date.now()}`,
+      receipt: `ord_${Date.now()}`,
     });
 
     return res.status(200).json(order);
