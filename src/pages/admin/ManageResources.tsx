@@ -10,6 +10,7 @@ const ManageResources = () => {
   const [editPrice, setEditPrice] = useState(0);
   const [newFile, setNewFile] = useState<File | null>(null);
   const [newThumbnail, setNewThumbnail] = useState<File | null>(null);
+  const [editOriginalPrice, setEditOriginalPrice] = useState(0);
 
   const fetchResources = async () => {
     setLoading(true);
@@ -73,8 +74,18 @@ const ManageResources = () => {
               <div>
                 <p className="font-medium">{res.title}</p>
                 <p className="text-xs text-gray-400">
-                  {res.type} • ₹{res.price} •{" "}
-                  {new Date(res.created_at).toLocaleString()}
+                  {res.type} •{" "}
+                  {res.original_price && res.original_price > res.price ? (
+                    <>
+                      <span className="line-through text-gray-400 mr-1">
+                        ₹{res.original_price}
+                      </span>
+                      <span className="text-purple-400">₹{res.price}</span>
+                    </>
+                  ) : (
+                    <span>₹{res.price}</span>
+                  )}{" "}
+                  • {new Date(res.created_at).toLocaleString()}
                 </p>
               </div>
 
@@ -90,6 +101,7 @@ const ManageResources = () => {
                         setEditTitle(res.title);
                         setEditDescription(res.description);
                         setEditPrice(res.price);
+                        setEditOriginalPrice(res.original_price || res.price);
                         setNewFile(null);
                         setNewThumbnail(null);
                       }}
@@ -144,6 +156,14 @@ const ManageResources = () => {
               onChange={(e) => setEditDescription(e.target.value)}
               className="w-full mb-3 bg-black/60 border border-white/10 rounded px-3 py-2 h-20"
               placeholder="Description"
+            />
+
+            <input
+              type="number"
+              value={editOriginalPrice}
+              onChange={(e) => setEditOriginalPrice(Number(e.target.value))}
+              className="w-full mb-3 bg-black/60 border border-white/10 rounded px-3 py-2"
+              placeholder="Original Price (MRP)"
             />
 
             <input
@@ -245,6 +265,7 @@ const ManageResources = () => {
                     .update({
                       title: editTitle,
                       description: editDescription,
+                      original_price: editOriginalPrice,
                       price: editPrice,
                       file_url: updatedFileUrl,
                       thumbnail_url: updatedThumbnailUrl,

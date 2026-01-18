@@ -4,14 +4,19 @@ export const uploadResource = async ({
   title,
   description,
   type,
-  price,
+  price,               // ✅ discounted price
+  originalPrice,       // ✅ original / MRP
   file,
   thumbnail,
   userId,
   mapName,
 }: any) => {
 
-  // 1️⃣ Upload file
+  if (!file) {
+    throw new Error("File is required");
+  }
+
+  // 1️⃣ Upload main resource file
   const filePath = `${userId}/${Date.now()}-${file.name}`;
   const { error: fileError } = await supabase.storage
     .from("resources")
@@ -19,7 +24,7 @@ export const uploadResource = async ({
 
   if (fileError) throw fileError;
 
-  // 2️⃣ Upload thumbnail
+  // 2️⃣ Upload thumbnail (optional)
   let thumbnailUrl = "";
   if (thumbnail) {
     const thumbPath = `${Date.now()}-${thumbnail.name}`;
@@ -36,18 +41,18 @@ export const uploadResource = async ({
     thumbnailUrl = data.publicUrl;
   }
 
-  // 3️⃣ Save resource in DB
+  // 3️⃣ Save resource in database
   const { error } = await supabase.from("resources").insert({
-  title,
-  description,
-  type,
-  price,
-  file_url: filePath,
-  thumbnail_url: thumbnailUrl,
-  created_by: userId,
-  map_name: mapName,
-});
-
+    title,
+    description,
+    type,
+    price,                    // ✅ selling price
+    original_price: originalPrice || price, // fallback safety
+    file_url: filePath,
+    thumbnail_url: thumbnailUrl,
+    created_by: userId,
+    map_name: mapName,
+  });
 
   if (error) throw error;
 };

@@ -97,6 +97,51 @@ const Products = () => {
     0
   );
 
+  const PriceBlock = ({
+    original,
+    price,
+  }: {
+    original?: number;
+    price: number;
+  }) => {
+    const hasDiscount = original && original > price;
+
+    const discountPercent =
+      hasDiscount && original
+        ? Math.round(((original - price) / original) * 100)
+        : 0;
+
+    return (
+      <div>
+        {hasDiscount && (
+          <div className="mb-1">
+            <span className="text-xs font-semibold text-red-500">
+              Launch Special
+            </span>
+          </div>
+        )}
+
+        {hasDiscount && (
+          <span className="inline-block mb-1 text-xs font-semibold bg-red-600 text-white px-2 py-0.5 rounded">
+            {discountPercent}% OFF
+          </span>
+        )}
+
+        <div className="flex items-center gap-2">
+          {hasDiscount && (
+            <span className="text-sm text-gray-400 line-through">
+              ₹{original}
+            </span>
+          )}
+
+          <span className="text-purple-400 font-semibold text-lg">
+            ₹{price}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <main className="bg-black text-white min-h-screen">
       <Header />
@@ -198,9 +243,11 @@ const Products = () => {
                   </p>
 
                   <div className="mt-4 flex justify-between items-center">
-                    <span className="text-purple-400 font-semibold">
-                      ₹{pdf.price}
-                    </span>
+                    <PriceBlock
+                      original={pdf.original_price}
+                      price={pdf.price}
+                    />
+
                     <button
                       onClick={() =>
                         addItem({
@@ -247,9 +294,8 @@ const Products = () => {
                   <p className="text-sm text-gray-400 mt-1">{s.description}</p>
 
                   <div className="mt-4 flex justify-between items-center">
-                    <span className="text-purple-400 font-semibold">
-                      ₹{s.price}
-                    </span>
+                    <PriceBlock original={s.original_price} price={s.price} />
+
                     <button
                       onClick={() =>
                         addItem({
@@ -272,127 +318,127 @@ const Products = () => {
       )}
 
       {/* INFO MAPS */}
-{activeTab === "info-maps" && (
-  <section className="mt-12 px-4 sm:px-6">
-    <h2 className="text-center text-xl sm:text-2xl font-semibold">
-      Info Maps
-    </h2>
+      {activeTab === "info-maps" && (
+        <section className="mt-12 px-4 sm:px-6">
+          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+            Info Maps
+          </h2>
 
-    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-      {infoMaps.map((item) => {
-        const alreadyAdded = isInCart(item.id);
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {infoMaps.map((item) => {
+              const alreadyAdded = isInCart(item.id);
 
-        return (
-          <div
-            key={item.id}
-            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-          >
-            {item.thumbnail_url && (
-              <img
-                src={item.thumbnail_url}
-                className="h-48 w-full object-cover"
-              />
-            )}
-
-            <div className="p-4">
-              <h3 className="font-medium">{item.title}</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                {item.description}
-              </p>
-
-              <div className="mt-4 flex justify-between items-center">
-                <span className="text-purple-400 font-semibold">
-                  ₹{item.price}
-                </span>
-
-                <button
-                  disabled={alreadyAdded}
-                  onClick={() =>
-                    addItem({
-                      id: item.id,
-                      title: item.title,
-                      map: "Info Map",
-                      price: item.price,
-                    })
-                  }
-                  className={`px-4 py-2 rounded-lg text-sm ${
-                    alreadyAdded
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-purple-600 hover:bg-purple-700"
-                  }`}
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
                 >
-                  {alreadyAdded ? "Added" : "Add to Cart"}
-                </button>
-              </div>
-            </div>
+                  {item.thumbnail_url && (
+                    <img
+                      src={item.thumbnail_url}
+                      className="h-48 w-full object-cover"
+                    />
+                  )}
+
+                  <div className="p-4">
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {item.description}
+                    </p>
+
+                    <div className="mt-4 flex justify-between items-center">
+                      <PriceBlock
+                        original={item.original_price}
+                        price={item.price}
+                      />
+
+                      <button
+                        disabled={alreadyAdded}
+                        onClick={() =>
+                          addItem({
+                            id: item.id,
+                            title: item.title,
+                            map: "Info Map",
+                            price: item.price,
+                          })
+                        }
+                        className={`px-4 py-2 rounded-lg text-sm ${
+                          alreadyAdded
+                            ? "bg-gray-600 cursor-not-allowed"
+                            : "bg-purple-600 hover:bg-purple-700"
+                        }`}
+                      >
+                        {alreadyAdded ? "Added" : "Add to Cart"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-    </div>
-  </section>
-)}
+        </section>
+      )}
 
-{/* HQ MAPS */}
-{activeTab === "hq-maps" && (
-  <section className="mt-12 px-4 sm:px-6">
-    <h2 className="text-center text-xl sm:text-2xl font-semibold">
-      HQ Maps
-    </h2>
+      {/* HQ MAPS */}
+      {activeTab === "hq-maps" && (
+        <section className="mt-12 px-4 sm:px-6">
+          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+            HQ Maps
+          </h2>
 
-    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-      {hqMaps.map((item) => {
-        const alreadyAdded = isInCart(item.id);
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {hqMaps.map((item) => {
+              const alreadyAdded = isInCart(item.id);
 
-        return (
-          <div
-            key={item.id}
-            className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-          >
-            {item.thumbnail_url && (
-              <img
-                src={item.thumbnail_url}
-                className="h-48 w-full object-cover"
-              />
-            )}
-
-            <div className="p-4">
-              <h3 className="font-medium">{item.title}</h3>
-              <p className="text-sm text-gray-400 mt-1">
-                {item.description}
-              </p>
-
-              <div className="mt-4 flex justify-between items-center">
-                <span className="text-purple-400 font-semibold">
-                  ₹{item.price}
-                </span>
-
-                <button
-                  disabled={alreadyAdded}
-                  onClick={() =>
-                    addItem({
-                      id: item.id,
-                      title: item.title,
-                      map: "HQ Map",
-                      price: item.price,
-                    })
-                  }
-                  className={`px-4 py-2 rounded-lg text-sm ${
-                    alreadyAdded
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-purple-600 hover:bg-purple-700"
-                  }`}
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
                 >
-                  {alreadyAdded ? "Added" : "Add to Cart"}
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  </section>
-)}
+                  {item.thumbnail_url && (
+                    <img
+                      src={item.thumbnail_url}
+                      className="h-48 w-full object-cover"
+                    />
+                  )}
 
+                  <div className="p-4">
+                    <h3 className="font-medium">{item.title}</h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {item.description}
+                    </p>
+
+                    <div className="mt-4 flex justify-between items-center">
+                      <span className="text-purple-400 font-semibold">
+                        ₹{item.price}
+                      </span>
+
+                      <button
+                        disabled={alreadyAdded}
+                        onClick={() =>
+                          addItem({
+                            id: item.id,
+                            title: item.title,
+                            map: "HQ Map",
+                            price: item.price,
+                          })
+                        }
+                        className={`px-4 py-2 rounded-lg text-sm ${
+                          alreadyAdded
+                            ? "bg-gray-600 cursor-not-allowed"
+                            : "bg-purple-600 hover:bg-purple-700"
+                        }`}
+                      >
+                        {alreadyAdded ? "Added" : "Add to Cart"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <Footer />
     </main>

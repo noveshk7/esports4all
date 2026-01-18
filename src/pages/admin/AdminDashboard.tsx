@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   /* ================= RESOURCE UPLOAD STATES ================= */
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [originalPrice, setOriginalPrice] = useState(199);
   const [price, setPrice] = useState(99);
   const [file, setFile] = useState<File | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
@@ -37,6 +38,13 @@ const AdminDashboard = () => {
       return;
     }
 
+    if (originalPrice < price) {
+      setMessage(
+        "Original price must be greater than or equal to selling price"
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       setMessage("");
@@ -46,6 +54,7 @@ const AdminDashboard = () => {
         description,
         type: resourceType,
         price,
+        originalPrice,
         file,
         thumbnail,
         userId: user.id,
@@ -82,12 +91,13 @@ const AdminDashboard = () => {
     }
 
     const { error } = await supabase.from("promo_codes").insert({
-  code: promoCode.toUpperCase(),
-  discount_percent: promoDiscount,
-  expires_at: promoExpiry || null,
-  active: true, // ✅ FIXED
-});
-
+      code: promoCode.toUpperCase(),
+      discount_percent: promoDiscount,
+      max_uses: 100, // ✅ REQUIRED
+      max_uses_per_user: 1,
+      expires_at: promoExpiry || null,
+      active: true,
+    });
 
     if (error) {
       setPromoMsg(error.message);
@@ -102,14 +112,13 @@ const AdminDashboard = () => {
   };
 
   const togglePromo = async (id: string, active: boolean) => {
-  await supabase
-    .from("promo_codes")
-    .update({ active: !active }) // ✅ FIXED
-    .eq("id", id);
+    await supabase
+      .from("promo_codes")
+      .update({ active: !active }) // ✅ FIXED
+      .eq("id", id);
 
-  fetchPromos();
-};
-
+    fetchPromos();
+  };
 
   useEffect(() => {
     if (activeTab === "promos") {
@@ -199,12 +208,31 @@ const AdminDashboard = () => {
                 </select>
               )}
 
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-              />
+              {/* ORIGINAL PRICE */}
+              <div>
+                <label className="block text-sm mb-1 text-gray-400">
+                  Original Price (₹)
+                </label>
+                <input
+                  type="number"
+                  value={originalPrice}
+                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
+                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
+                />
+              </div>
+
+              {/* DISCOUNTED PRICE */}
+              <div>
+                <label className="block text-sm mb-1 text-gray-400">
+                  Selling Price (₹)
+                </label>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
+                />
+              </div>
 
               <textarea
                 placeholder="Description"
@@ -213,8 +241,14 @@ const AdminDashboard = () => {
                 className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3 h-28"
               />
 
-              <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              <input type="file" onChange={(e) => setThumbnail(e.target.files?.[0] || null)} />
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <input
+                type="file"
+                onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+              />
 
               <button
                 onClick={handleUpload}
@@ -290,7 +324,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <button
-                    onClick={() => togglePromo(p.id, p.is_active)}
+                    onClick={() => togglePromo(p.id, p.active)}
                     className={`text-sm ${
                       p.active ? "text-green-400" : "text-red-400"
                     }`}
