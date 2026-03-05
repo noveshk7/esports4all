@@ -13,8 +13,13 @@ const CTASection = () => {
           ESPORTS4ALL proven strategies.
         </p>
 
-        <button onClick={() => navigate("/products")}
-        className="mt-8 px-8 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition">
+        <button
+          onClick={() => {
+            window.scrollTo(0, 0);
+            navigate("/products");
+          }}
+          className="mt-8 px-8 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 transition"
+        >
           Get Started Now →
         </button>
       </div>
