@@ -4,30 +4,24 @@ export const uploadResource = async ({
   title,
   description,
   type,
-  price,               // ✅ discounted price
-  originalPrice,       // ✅ original / MRP
-  file,
+  price,               // discounted price
+  originalPrice,       // MRP
   thumbnail,
+  cosmofeed_url,
   userId,
   mapName,
 }: any) => {
 
-  if (!file) {
-    throw new Error("File is required");
+  if (!cosmofeed_url) {
+    throw new Error("CosmoFeed product link is required");
   }
 
-  // 1️⃣ Upload main resource file
-  const filePath = `${userId}/${Date.now()}-${file.name}`;
-  const { error: fileError } = await supabase.storage
-    .from("resources")
-    .upload(filePath, file);
-
-  if (fileError) throw fileError;
-
-  // 2️⃣ Upload thumbnail (optional)
+  /* 1️⃣ Upload thumbnail (optional but recommended) */
   let thumbnailUrl = "";
+
   if (thumbnail) {
     const thumbPath = `${Date.now()}-${thumbnail.name}`;
+
     const { error: thumbError } = await supabase.storage
       .from("thumbnails")
       .upload(thumbPath, thumbnail);
@@ -41,17 +35,17 @@ export const uploadResource = async ({
     thumbnailUrl = data.publicUrl;
   }
 
-  // 3️⃣ Save resource in database
+  /* 2️⃣ Save resource in database */
   const { error } = await supabase.from("resources").insert({
     title,
     description,
     type,
-    price,                    // ✅ selling price
-    original_price: originalPrice || price, // fallback safety
-    file_url: filePath,
+    price,
+    original_price: originalPrice || price,
     thumbnail_url: thumbnailUrl,
+    cosmofeed_url,          // 🔥 MAIN PAYMENT LINK
     created_by: userId,
-    map_name: mapName,
+    map_name: mapName || null,
   });
 
   if (error) throw error;

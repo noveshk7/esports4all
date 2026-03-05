@@ -12,17 +12,18 @@ const AdminDashboard = () => {
 
   const [activeTab, setActiveTab] = useState<Tab>("upload");
 
-  /* ================= RESOURCE UPLOAD STATES ================= */
+  /* ================= RESOURCE STATES ================= */
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [originalPrice, setOriginalPrice] = useState(199);
   const [price, setPrice] = useState(99);
-  const [file, setFile] = useState<File | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [cosmoUrl, setCosmoUrl] = useState("");
   const [resourceType, setResourceType] = useState("");
   const [mapName, setMapName] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   /* ================= PROMO STATES ================= */
   const [promoCode, setPromoCode] = useState("");
@@ -31,17 +32,20 @@ const AdminDashboard = () => {
   const [promos, setPromos] = useState<any[]>([]);
   const [promoMsg, setPromoMsg] = useState("");
 
-  /* ================= RESOURCE UPLOAD ================= */
+  /* ================= CREATE RESOURCE ================= */
   const handleUpload = async () => {
-    if (!file || !user) {
-      setMessage("File is required");
+    if (!user) {
+      setMessage("Login required");
+      return;
+    }
+
+    if (!cosmoUrl) {
+      setMessage("CosmoFeed product link is required");
       return;
     }
 
     if (originalPrice < price) {
-      setMessage(
-        "Original price must be greater than or equal to selling price"
-      );
+      setMessage("Original price must be greater than selling price");
       return;
     }
 
@@ -55,19 +59,21 @@ const AdminDashboard = () => {
         type: resourceType,
         price,
         originalPrice,
-        file,
         thumbnail,
+        cosmofeed_url: cosmoUrl,
         userId: user.id,
-        mapName: resourceType === "rotation-map" ? mapName : null,
+        mapName: resourceType === "rotation-place" ? mapName : null,
       });
 
-      setMessage("✅ Resource uploaded successfully");
+      setMessage("✅ Product created successfully");
 
       setTitle("");
       setDescription("");
+      setOriginalPrice(199);
       setPrice(99);
-      setFile(null);
       setThumbnail(null);
+      setCosmoUrl("");
+      setMapName("");
     } catch (err: any) {
       setMessage(err.message);
     } finally {
@@ -81,6 +87,7 @@ const AdminDashboard = () => {
       .from("promo_codes")
       .select("*")
       .order("created_at", { ascending: false });
+
     setPromos(data || []);
   };
 
@@ -93,7 +100,7 @@ const AdminDashboard = () => {
     const { error } = await supabase.from("promo_codes").insert({
       code: promoCode.toUpperCase(),
       discount_percent: promoDiscount,
-      max_uses: 100, // ✅ REQUIRED
+      max_uses: 100,
       max_uses_per_user: 1,
       expires_at: promoExpiry || null,
       active: true,
@@ -112,46 +119,33 @@ const AdminDashboard = () => {
   };
 
   const togglePromo = async (id: string, active: boolean) => {
-    await supabase
-      .from("promo_codes")
-      .update({ active: !active }) // ✅ FIXED
-      .eq("id", id);
-
+    await supabase.from("promo_codes").update({ active: !active }).eq("id", id);
     fetchPromos();
   };
 
   useEffect(() => {
-    if (activeTab === "promos") {
-      fetchPromos();
-    }
+    if (activeTab === "promos") fetchPromos();
   }, [activeTab]);
 
   return (
     <main className="bg-black min-h-screen text-white">
       <Header />
 
-      <div className="pt-28 px-4 sm:px-6 flex flex-col items-center">
-        {/* TITLE */}
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl sm:text-3xl font-semibold">
-            Admin Dashboard
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Manage resources & promo codes
-          </p>
-        </div>
+      <div className="pt-28 px-4 flex flex-col items-center">
+        <h1 className="text-3xl font-semibold mb-2">Admin Dashboard</h1>
+        <p className="text-gray-400 mb-8">CosmoFeed powered products</p>
 
         {/* TABS */}
         <div className="mb-10 flex bg-white/5 border border-white/10 rounded-xl p-1">
           {[
-            { key: "upload", label: "Upload Resource" },
+            { key: "upload", label: "Create Product" },
             { key: "manage", label: "Manage Resources" },
             { key: "promos", label: "Promo Codes" },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as Tab)}
-              className={`px-6 py-2 text-sm rounded-lg transition ${
+              className={`px-6 py-2 rounded-lg ${
                 activeTab === tab.key
                   ? "bg-purple-600 text-white"
                   : "text-gray-400 hover:text-white"
@@ -162,116 +156,93 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* ================= UPLOAD ================= */}
+        {/* CREATE PRODUCT */}
         {activeTab === "upload" && (
-          <div className="w-full max-w-2xl bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8">
-            {message && (
-              <div className="mb-4 text-sm text-purple-400 text-center">
-                {message}
-              </div>
+          <div className="w-full max-w-2xl bg-white/5 p-6 rounded-xl space-y-4">
+            {message && <p className="text-purple-400 text-sm">{message}</p>}
+
+            <input
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-black/60 px-4 py-3 rounded-lg"
+            />
+
+            <select
+              value={resourceType}
+              onChange={(e) => {
+                setResourceType(e.target.value);
+                setMapName("");
+              }}
+              className="w-full bg-black/60 px-4 py-3 rounded-lg"
+            >
+              <option value="">Select type</option>
+              <option value="pdf">PDF</option>
+              <option value="sheet">Sheet</option>
+              <option value="info-map">Info Map</option>
+              <option value="hq-map">HQ Map</option>
+              <option value="rotation-place">Rotation Place</option>
+            </select>
+
+            {resourceType === "rotation-place" && (
+              <input
+                placeholder="Map name (Bermuda, Alpine...)"
+                value={mapName}
+                onChange={(e) => setMapName(e.target.value)}
+                className="w-full bg-black/60 px-4 py-3 rounded-lg"
+              />
             )}
 
-            <div className="space-y-4">
-              <input
-                placeholder="Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-              />
+            <input
+              placeholder="CosmoFeed Product Link"
+              value={cosmoUrl}
+              onChange={(e) => setCosmoUrl(e.target.value)}
+              className="w-full bg-black/60 px-4 py-3 rounded-lg"
+            />
 
-              <select
-                value={resourceType}
-                onChange={(e) => {
-                  setResourceType(e.target.value);
-                  setMapName("");
-                }}
-                className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-              >
-                <option value="">Select type</option>
-                <option value="rotation-map">Rotation Map</option>
-                <option value="pdf">PDF</option>
-                <option value="sheet">Sheet</option>
-              </select>
+            <input
+              type="number"
+              placeholder="Original Price"
+              value={originalPrice}
+              onChange={(e) => setOriginalPrice(Number(e.target.value))}
+              className="w-full bg-black/60 px-4 py-3 rounded-lg"
+            />
 
-              {resourceType === "rotation-map" && (
-                <select
-                  value={mapName}
-                  onChange={(e) => setMapName(e.target.value)}
-                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-                >
-                  <option value="">Select map</option>
-                  <option>Bermuda</option>
-                  <option>Purgatory</option>
-                  <option>Kalahari</option>
-                  <option>Alpine</option>
-                  <option>NeXTerra</option>
-                </select>
-              )}
+            <input
+              type="number"
+              placeholder="Selling Price"
+              value={price}
+              onChange={(e) => setPrice(Number(e.target.value))}
+              className="w-full bg-black/60 px-4 py-3 rounded-lg"
+            />
 
-              {/* ORIGINAL PRICE */}
-              <div>
-                <label className="block text-sm mb-1 text-gray-400">
-                  Original Price (₹)
-                </label>
-                <input
-                  type="number"
-                  value={originalPrice}
-                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
-                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-                />
-              </div>
+            <textarea
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-black/60 px-4 py-3 rounded-lg h-28"
+            />
 
-              {/* DISCOUNTED PRICE */}
-              <div>
-                <label className="block text-sm mb-1 text-gray-400">
-                  Selling Price (₹)
-                </label>
-                <input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
-                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-                />
-              </div>
+            <input
+              type="file"
+              onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
+            />
 
-              <textarea
-                placeholder="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3 h-28"
-              />
-
-              <input
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-              <input
-                type="file"
-                onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
-              />
-
-              <button
-                onClick={handleUpload}
-                disabled={loading}
-                className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700"
-              >
-                {loading ? "Uploading..." : "Upload Resource"}
-              </button>
-            </div>
+            <button
+              onClick={handleUpload}
+              disabled={loading}
+              className="w-full bg-purple-600 py-3 rounded-lg"
+            >
+              {loading ? "Saving..." : "Create Product"}
+            </button>
           </div>
         )}
 
-        {/* ================= MANAGE ================= */}
-        {activeTab === "manage" && (
-          <div className="w-full max-w-6xl">
-            <ManageResources />
-          </div>
-        )}
+        {activeTab === "manage" && <ManageResources />}
 
-        {/* ================= PROMOS ================= */}
         {activeTab === "promos" && (
-          <div className="w-full max-w-3xl bg-white/5 border border-white/10 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Create Promo Code</h2>
+          <div className="w-full max-w-3xl bg-white/5 p-6 rounded-xl">
+            <h2 className="text-lg font-semibold mb-4">Promo Codes</h2>
 
             {promoMsg && (
               <p className="text-sm text-purple-400 mb-3">{promoMsg}</p>
@@ -282,7 +253,7 @@ const AdminDashboard = () => {
                 placeholder="PROMO CODE"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
-                className="bg-black/60 border border-white/10 rounded-lg px-4 py-3"
+                className="bg-black/60 px-4 py-3 rounded-lg"
               />
 
               <input
@@ -290,44 +261,34 @@ const AdminDashboard = () => {
                 placeholder="Discount %"
                 value={promoDiscount}
                 onChange={(e) => setPromoDiscount(Number(e.target.value))}
-                className="bg-black/60 border border-white/10 rounded-lg px-4 py-3"
+                className="bg-black/60 px-4 py-3 rounded-lg"
               />
 
               <input
                 type="date"
                 value={promoExpiry}
                 onChange={(e) => setPromoExpiry(e.target.value)}
-                className="bg-black/60 border border-white/10 rounded-lg px-4 py-3"
+                className="bg-black/60 px-4 py-3 rounded-lg"
               />
 
               <button
                 onClick={createPromo}
-                className="bg-purple-600 hover:bg-purple-700 py-2 rounded-lg"
+                className="bg-purple-600 py-2 rounded-lg"
               >
                 Create Promo
               </button>
             </div>
 
-            <h3 className="mt-8 mb-3 font-medium">Existing Promos</h3>
-
-            <div className="space-y-3">
+            <div className="mt-6 space-y-3">
               {promos.map((p) => (
                 <div
                   key={p.id}
-                  className="flex justify-between items-center bg-black/40 border border-white/10 rounded-lg px-4 py-2"
+                  className="flex justify-between bg-black/40 px-4 py-2 rounded-lg"
                 >
-                  <div>
-                    <p className="font-medium">{p.code}</p>
-                    <p className="text-xs text-gray-400">
-                      {p.discount_percent}% off
-                    </p>
-                  </div>
-
+                  <span>{p.code}</span>
                   <button
                     onClick={() => togglePromo(p.id, p.active)}
-                    className={`text-sm ${
-                      p.active ? "text-green-400" : "text-red-400"
-                    }`}
+                    className={p.active ? "text-green-400" : "text-red-400"}
                   >
                     {p.active ? "Active" : "Disabled"}
                   </button>

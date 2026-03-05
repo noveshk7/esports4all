@@ -3,100 +3,103 @@ import CategoryTabs from "../components/products/CategoryTabs";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { useCart } from "../context/CartContext";
+
+/* SEARCH BAR */
+  const SearchBar = ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+  }) => (
+    <div className="max-w-6xl mx-auto mb-6">
+      <input
+        type="text"
+        placeholder="Search..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-purple-500"
+      />
+    </div>
+  );
 
 const Products = () => {
-  const { addItem, isInCart } = useCart();
+  const [mapSearch, setMapSearch] = useState("");
+  const [pdfSearch, setPdfSearch] = useState("");
+  const [sheetSearch, setSheetSearch] = useState("");
 
   const [pdfs, setPdfs] = useState<any[]>([]);
   const [sheets, setSheets] = useState<any[]>([]);
-  const [resources, setResources] = useState<any[]>([]);
   const [infoMaps, setInfoMaps] = useState<any[]>([]);
   const [hqMaps, setHqMaps] = useState<any[]>([]);
+  const [rotationPlaces, setRotationPlaces] = useState<any[]>([]);
 
   const [activeTab, setActiveTab] = useState<
     "maps" | "pdfs" | "sheets" | "info-maps" | "hq-maps"
   >("maps");
 
-  const [selectedPlaces, setSelectedPlaces] = useState<Record<string, string>>(
-    {}
-  );
+  const [selectedMap, setSelectedMap] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState("newest");
 
-  const groupedByMap = resources.reduce((acc: any, res: any) => {
-    if (!res.map_name) return acc;
-    acc[res.map_name] = acc[res.map_name] || [];
-    acc[res.map_name].push(res);
+  useEffect(() => {
+    const fetchByType = async (type: string, setter: any) => {
+      const { data } = await supabase
+        .from("resources")
+        .select("*")
+        .eq("type", type)
+        .order("created_at", { ascending: false });
+
+      setter(data || []);
+    };
+
+    fetchByType("pdf", setPdfs);
+    fetchByType("sheet", setSheets);
+    fetchByType("info-map", setInfoMaps);
+    fetchByType("hq-map", setHqMaps);
+    fetchByType("rotation-place", setRotationPlaces);
+  }, []);
+
+  
+
+  const filterBySearch = (items: any[], query: string) => {
+  if (!query) return items;
+
+  const normalizedQuery = query
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+  return items.filter((item) =>
+    item.title
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .includes(normalizedQuery)
+  );
+};
+
+  /* GROUP ROTATION PLACES BY MAP */
+  const placesByMap = rotationPlaces.reduce((acc: any, place: any) => {
+    if (!place.map_name) return acc;
+    acc[place.map_name] = acc[place.map_name] || [];
+    acc[place.map_name].push(place);
     return acc;
   }, {});
 
-  useEffect(() => {
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("type", "pdf")
-      .then(({ data }) => {
-        setPdfs(data || []);
-      });
+  const mapNames = Object.keys(placesByMap);
 
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("type", "sheet")
-      .then(({ data }) => {
-        setSheets(data || []);
-      });
+  /* SORT FUNCTION */
+  const sortResources = (items: any[]) => {
+    const sorted = [...items];
 
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("type", "rotation-map")
-      .then(({ data }) => {
-        setResources(data || []);
-      });
+    if (sortOption === "low") {
+      sorted.sort((a, b) => a.price - b.price);
+    } else if (sortOption === "high") {
+      sorted.sort((a, b) => b.price - a.price);
+    }
 
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("type", "info-map")
-      .then(({ data }) => {
-        setInfoMaps(data || []);
-      });
-
-    supabase
-      .from("resources")
-      .select("*")
-      .eq("type", "hq-map")
-      .then(({ data }) => {
-        setHqMaps(data || []);
-      });
-  }, []);
-
-  const handleAddToCart = () => {
-    Object.entries(selectedPlaces).forEach(([mapName, id]) => {
-      const res = resources.find((r) => r.id === id);
-      if (!res) return;
-
-      // ✅ Skip if already in cart
-      if (isInCart(res.id)) return;
-
-      addItem({
-        id: res.id,
-        title: res.title,
-        map: mapName,
-        price: res.price,
-      });
-    });
+    return sorted;
   };
 
-  const selectedResources = Object.values(selectedPlaces)
-    .map((id) => resources.find((r) => r.id === id))
-    .filter(Boolean);
-
-  const totalPrice = selectedResources.reduce(
-    (sum: number, r: any) => sum + r.price,
-    0
-  );
-
+  /* PRICE BLOCK */
   const PriceBlock = ({
     original,
     price,
@@ -105,7 +108,6 @@ const Products = () => {
     price: number;
   }) => {
     const hasDiscount = original && original > price;
-
     const discountPercent =
       hasDiscount && original
         ? Math.round(((original - price) / original) * 100)
@@ -114,15 +116,13 @@ const Products = () => {
     return (
       <div>
         {hasDiscount && (
-          <div className="mb-1">
-            <span className="text-xs font-semibold text-red-500">
-              Launch Special
-            </span>
-          </div>
+          <p className="text-xs text-orange-400 mb-1">
+            Republic Day Deal 🇮🇳
+          </p>
         )}
 
         {hasDiscount && (
-          <span className="inline-block mb-1 text-xs font-semibold bg-red-600 text-white px-2 py-0.5 rounded">
+          <span className="inline-block mb-2 text-xs font-semibold bg-red-600 text-white px-2 py-0.5 rounded">
             {discountPercent}% OFF
           </span>
         )}
@@ -133,7 +133,6 @@ const Products = () => {
               ₹{original}
             </span>
           )}
-
           <span className="text-purple-400 font-semibold text-lg">
             ₹{price}
           </span>
@@ -141,6 +140,61 @@ const Products = () => {
       </div>
     );
   };
+
+  /* RESOURCE CARD */
+  const ResourceCard = ({ item }: any) => (
+    <div className="relative bg-white/5 border border-white/10 rounded-xl overflow-hidden transform hover:scale-105 transition duration-300 hover:border-purple-500/50 hover:shadow-[0_0_25px_rgba(168,85,247,0.25)]">
+      {item.thumbnail_url && (
+        <img
+          src={item.thumbnail_url}
+          className="h-48 w-full object-cover"
+          alt={item.title}
+        />
+      )}
+
+      <div className="p-4">
+        <div className="flex justify-between items-start">
+          <h3 className="font-medium pr-2 line-clamp-2">{item.title}</h3>
+
+          {item.featured && (
+            <span className="text-xs bg-gradient-to-r from-yellow-400 to-blue-500 text-black px-2 py-1 rounded font-semibold shadow whitespace-nowrap">
+              BEST SELLER 🔥
+            </span>
+          )}
+        </div>
+
+        <p className="text-sm text-gray-400 mt-1">{item.description}</p>
+
+        <div className="mt-4 flex justify-between items-center">
+          <PriceBlock original={item.original_price} price={item.price} />
+
+          <a
+            href={item.cosmofeed_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
+          >
+            Buy Now
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+
+  /* SORT DROPDOWN */
+  const SortBar = () => (
+    <div className="max-w-6xl mx-auto mb-6 flex justify-end">
+      <select
+        value={sortOption}
+        onChange={(e) => setSortOption(e.target.value)}
+        className="bg-black border border-white/10 px-3 py-2 rounded text-sm"
+      >
+        <option value="newest">Newest</option>
+        <option value="low">Price: Low → High</option>
+        <option value="high">Price: High → Low</option>
+      </select>
+    </div>
+  );
 
   return (
     <main className="bg-black text-white min-h-screen">
@@ -151,7 +205,8 @@ const Products = () => {
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
           Premium Resources
         </h1>
-        <p className="mt-3 text-gray-400 text-sm sm:text-base">
+
+        <p className="mt-3 text-gray-400">
           Professional esports resources to elevate your gameplay
         </p>
 
@@ -160,110 +215,75 @@ const Products = () => {
         </div>
       </section>
 
-      {/* MAPS */}
+      {/* ROTATION PATHS */}
       {activeTab === "maps" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-xl sm:text-2xl font-semibold">
-            Rotation Path Bundles
-          </h2>
+          {!selectedMap ? (
+            <>
+              <h2 className="text-center text-2xl font-semibold mb-8">
+                Rotation Paths
+              </h2>
 
-          <p className="text-center text-gray-400 mt-2 text-sm">
-            Select one drop location from each map
-          </p>
-
-          <div className="mt-8 max-w-3xl mx-auto bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6 space-y-6">
-            {Object.entries(groupedByMap).map(([map, places]: any) => (
-              <div key={map}>
-                <label className="block text-sm mb-2">{map}</label>
-                <select
-                  className="w-full bg-black/60 border border-white/10 rounded-lg px-4 py-3"
-                  value={selectedPlaces[map] || ""}
-                  onChange={(e) =>
-                    setSelectedPlaces((p) => ({
-                      ...p,
-                      [map]: e.target.value,
-                    }))
-                  }
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                {mapNames.map((map) => (
+                  <button
+                    key={map}
+                    onClick={() => setSelectedMap(map)}
+                    className="bg-white/5 border border-white/10 rounded-xl p-6 text-left hover:bg-white/10 transition"
+                  >
+                    <h3 className="text-xl font-semibold">{map}</h3>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {placesByMap[map].length} places available
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="max-w-6xl mx-auto mb-6">
+                <button
+                  onClick={() => setSelectedMap(null)}
+                  className="text-sm text-purple-400 hover:underline"
                 >
-                  <option value="">Select drop location</option>
-                  {places.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} – ₹{p.price}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-
-            {/* SUMMARY */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/5 border border-white/10 rounded-xl px-4 py-4">
-              <div>
-                <p className="text-sm text-gray-400">
-                  {selectedResources.length} selected
-                </p>
-                <p className="text-xl font-semibold">₹{totalPrice}</p>
+                  ← Back to maps
+                </button>
               </div>
 
-              <button
-                onClick={handleAddToCart}
-                disabled={selectedResources.length === 0}
-                className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-6 py-3 rounded-xl"
-              >
-                Add to Cart
-              </button>
-            </div>
-          </div>
+              <h2 className="text-center text-2xl font-semibold mb-8">
+                {selectedMap} Rotation Places
+              </h2>
+
+              <SearchBar value={mapSearch} onChange={setMapSearch} />
+
+              <SortBar />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                {sortResources(
+                  filterBySearch(placesByMap[selectedMap], mapSearch)
+                ).map((item: any) => (
+                  <ResourceCard key={item.id} item={item} />
+                ))}
+              </div>
+            </>
+          )}
         </section>
       )}
 
       {/* PDFS */}
       {activeTab === "pdfs" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+          <h2 className="text-center text-2xl font-semibold mb-8">
             Strategy Guides
           </h2>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {pdfs.map((pdf) => (
-              <div
-                key={pdf.id}
-                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-              >
-                {pdf.thumbnail_url && (
-                  <img
-                    src={pdf.thumbnail_url}
-                    className="h-48 w-full object-cover"
-                  />
-                )}
+          <SearchBar value={pdfSearch} onChange={setPdfSearch} />
 
-                <div className="p-4">
-                  <h3 className="font-medium">{pdf.title}</h3>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {pdf.description}
-                  </p>
+          <SortBar />
 
-                  <div className="mt-4 flex justify-between items-center">
-                    <PriceBlock
-                      original={pdf.original_price}
-                      price={pdf.price}
-                    />
-
-                    <button
-                      onClick={() =>
-                        addItem({
-                          id: pdf.id,
-                          title: pdf.title,
-                          map: "PDF",
-                          price: pdf.price,
-                        })
-                      }
-                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {sortResources(filterBySearch(pdfs, pdfSearch)).map((item) => (
+              <ResourceCard key={item.id} item={item} />
             ))}
           </div>
         </section>
@@ -272,46 +292,17 @@ const Products = () => {
       {/* SHEETS */}
       {activeTab === "sheets" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+          <h2 className="text-center text-2xl font-semibold mb-8">
             Team Resources
           </h2>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {sheets.map((s) => (
-              <div
-                key={s.id}
-                className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-              >
-                {s.thumbnail_url && (
-                  <img
-                    src={s.thumbnail_url}
-                    className="h-48 w-full object-cover"
-                  />
-                )}
+          <SearchBar value={sheetSearch} onChange={setSheetSearch} />
 
-                <div className="p-4">
-                  <h3 className="font-medium">{s.title}</h3>
-                  <p className="text-sm text-gray-400 mt-1">{s.description}</p>
+          <SortBar />
 
-                  <div className="mt-4 flex justify-between items-center">
-                    <PriceBlock original={s.original_price} price={s.price} />
-
-                    <button
-                      onClick={() =>
-                        addItem({
-                          id: s.id,
-                          title: s.title,
-                          map: "Sheet",
-                          price: s.price,
-                        })
-                      }
-                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {sortResources(filterBySearch(sheets, sheetSearch)).map((item) => (
+              <ResourceCard key={item.id} item={item} />
             ))}
           </div>
         </section>
@@ -320,61 +311,16 @@ const Products = () => {
       {/* INFO MAPS */}
       {activeTab === "info-maps" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+          <h2 className="text-center text-2xl font-semibold mb-8">
             Info Maps
           </h2>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {infoMaps.map((item) => {
-              const alreadyAdded = isInCart(item.id);
+          <SortBar />
 
-              return (
-                <div
-                  key={item.id}
-                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-                >
-                  {item.thumbnail_url && (
-                    <img
-                      src={item.thumbnail_url}
-                      className="h-48 w-full object-cover"
-                    />
-                  )}
-
-                  <div className="p-4">
-                    <h3 className="font-medium">{item.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">
-                      {item.description}
-                    </p>
-
-                    <div className="mt-4 flex justify-between items-center">
-                      <PriceBlock
-                        original={item.original_price}
-                        price={item.price}
-                      />
-
-                      <button
-                        disabled={alreadyAdded}
-                        onClick={() =>
-                          addItem({
-                            id: item.id,
-                            title: item.title,
-                            map: "Info Map",
-                            price: item.price,
-                          })
-                        }
-                        className={`px-4 py-2 rounded-lg text-sm ${
-                          alreadyAdded
-                            ? "bg-gray-600 cursor-not-allowed"
-                            : "bg-purple-600 hover:bg-purple-700"
-                        }`}
-                      >
-                        {alreadyAdded ? "Added" : "Add to Cart"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {sortResources(infoMaps).map((item) => (
+              <ResourceCard key={item.id} item={item} />
+            ))}
           </div>
         </section>
       )}
@@ -382,60 +328,16 @@ const Products = () => {
       {/* HQ MAPS */}
       {activeTab === "hq-maps" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-xl sm:text-2xl font-semibold">
+          <h2 className="text-center text-2xl font-semibold mb-8">
             HQ Maps
           </h2>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {hqMaps.map((item) => {
-              const alreadyAdded = isInCart(item.id);
+          <SortBar />
 
-              return (
-                <div
-                  key={item.id}
-                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
-                >
-                  {item.thumbnail_url && (
-                    <img
-                      src={item.thumbnail_url}
-                      className="h-48 w-full object-cover"
-                    />
-                  )}
-
-                  <div className="p-4">
-                    <h3 className="font-medium">{item.title}</h3>
-                    <p className="text-sm text-gray-400 mt-1">
-                      {item.description}
-                    </p>
-
-                    <div className="mt-4 flex justify-between items-center">
-                      <span className="text-purple-400 font-semibold">
-                        ₹{item.price}
-                      </span>
-
-                      <button
-                        disabled={alreadyAdded}
-                        onClick={() =>
-                          addItem({
-                            id: item.id,
-                            title: item.title,
-                            map: "HQ Map",
-                            price: item.price,
-                          })
-                        }
-                        className={`px-4 py-2 rounded-lg text-sm ${
-                          alreadyAdded
-                            ? "bg-gray-600 cursor-not-allowed"
-                            : "bg-purple-600 hover:bg-purple-700"
-                        }`}
-                      >
-                        {alreadyAdded ? "Added" : "Add to Cart"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {sortResources(hqMaps).map((item) => (
+              <ResourceCard key={item.id} item={item} />
+            ))}
           </div>
         </section>
       )}

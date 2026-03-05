@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
-import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
@@ -30,7 +29,6 @@ const App = () => {
           </PrivateRoute>
         }
       />
-      <Route path="/cart" element={<Cart />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />
