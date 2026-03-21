@@ -117,7 +117,7 @@ const Products = () => {
       <div>
         {hasDiscount && (
           <p className="text-xs text-orange-400 mb-1">
-            Republic Day Deal 🇮🇳
+            First Time Launch Offer 🎉
           </p>
         )}
 
