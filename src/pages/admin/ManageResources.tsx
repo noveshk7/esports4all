@@ -14,6 +14,7 @@ const ManageResources = () => {
   const [editOriginalPrice, setEditOriginalPrice] = useState(0);
   const [editCosmoUrl, setEditCosmoUrl] = useState("");
   const [editFeatured, setEditFeatured] = useState(false);
+  const [editOrder, setEditOrder] = useState(0);
   const [newThumbnail, setNewThumbnail] = useState<File | null>(null);
 
   const fetchResources = async () => {
@@ -137,6 +138,7 @@ const ManageResources = () => {
                       setEditCosmoUrl(res.cosmofeed_url || "");
                       setEditFeatured(res.featured || false);
                       setNewThumbnail(null);
+                      setEditOrder(res.featured_order || 0);
                     }}
                     className={`px-4 py-2 text-sm rounded-lg ${
                       isPurchased
@@ -207,6 +209,14 @@ const ManageResources = () => {
   </label>
 </div>
 
+<input
+  type="number"
+  value={editOrder}
+  onChange={(e) => setEditOrder(Number(e.target.value))}
+  placeholder="Featured Order (1 = first)"
+  className="w-full mb-3 bg-black/60 border border-white/10 rounded px-3 py-2"
+/>
+
             <input
               type="number"
               value={editOriginalPrice}
@@ -270,6 +280,7 @@ const ManageResources = () => {
     cosmofeed_url: editCosmoUrl,
     thumbnail_url: thumbnailUrl,
     featured: editFeatured,
+    featured_order: editOrder,
   })
   .eq("id", editing.id);
 

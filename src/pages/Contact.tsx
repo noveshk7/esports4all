@@ -66,17 +66,17 @@ const Contact = () => {
               <ContactItem
                 icon={<MessageCircle className="text-green-500" />}
                 title="WhatsApp"
-                value="+91 98765 43210"
+                value="+91 7668268104"
               />
               <ContactItem
                 icon={<Instagram className="text-pink-500" />}
                 title="Instagram"
-                value="@coachselzer"
+                value="@coach_selzer"
               />
               <ContactItem
                 icon={<Mail className="text-blue-500" />}
                 title="Email"
-                value="coach@selzer.com"
+                value="helloselzer@gmail.com"
               />
             </div>
           </div>

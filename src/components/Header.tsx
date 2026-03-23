@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { UserCircle, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useRef, useState } from "react";
-import logo from "../assets/e4a.svg";
+import logo from "../assets/esports4all name logo 1.png";
 
 const Header = () => {
   const { user, role, username, logout } = useAuth();
@@ -44,7 +44,7 @@ const Header = () => {
           <img
             src={logo}
             alt="Esports4All Logo"
-            className="h-12 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
         </div>
 

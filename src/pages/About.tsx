@@ -1,9 +1,15 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import coachImg from "../assets/e4a.jpeg";
+import { useNavigate } from "react-router-dom";
+import coachImg from "../assets/selzer logo png.png";
+import e4aImg from "../assets/e4a.jpeg";
 import { MessageCircle } from "lucide-react";
 
+
 const About = () => {
+  const navigate = useNavigate();
+
+
   return (
     <main className="bg-black text-white min-h-screen">
       <Header />
@@ -23,7 +29,7 @@ const About = () => {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-14 items-center">
         <div className="flex justify-center">
           <img
-            src={coachImg}
+            src={e4aImg}
             alt="Esports4All"
             className="w-72 h-72 sm:w-80 sm:h-80 object-cover rounded-2xl border border-white/10 shadow-lg"
           />
@@ -67,12 +73,12 @@ const About = () => {
           </p>
 
           <a
-            href="https://discord.gg/yourserver"
+            href="https://www.discord.gg/ccJ3Y9zEnn"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block mt-6 bg-purple-600 hover:bg-purple-700 transition px-8 py-3 rounded-lg font-medium"
           >
-            Join Discord Server
+            Join Our Discord Server
           </a>
         </div>
       </section>
@@ -103,7 +109,7 @@ const About = () => {
             Coaching Philosophy
           </h2>
           <p className="text-gray-400 text-sm leading-relaxed mb-4">
-            With over 3 years of competitive Free Fire experience, Coach Selzer
+            With over 3 years of competitive coaching experience in FreeFire, Coach Selzer
             focuses on decision-making, rotations, and structured team play rather
             than mechanical skill alone.
           </p>
@@ -152,14 +158,14 @@ const About = () => {
 
         <div className="space-y-4">
           <Service
-            title="1-on-1 Player Coaching"
+            title="1-on-1 Player / Team Coaching"
             desc="Personalized sessions focused on individual improvement"
             price="₹499 / hr"
           />
           <Service
             title="Team Coaching Package"
             desc="Complete team strategy, rotations, and coordination"
-            price="₹1,999 / 3 sessions"
+            price="₹1,999 / 5 sessions"
           />
           <Service
             title="Strategy Review"
@@ -169,7 +175,12 @@ const About = () => {
         </div>
 
         <div className="flex justify-center mt-10">
-          <button className="bg-purple-600 hover:bg-purple-700 transition px-8 py-3 rounded-lg">
+          <button
+          onClick={() => {
+          window.scrollTo(0, 0);
+          navigate("/contact");
+        }}
+           className="bg-purple-600 hover:bg-purple-700 transition px-8 py-3 rounded-lg">
             Get in Touch
           </button>
         </div>

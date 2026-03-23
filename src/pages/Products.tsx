@@ -93,17 +93,21 @@ const mapNames = Object.keys(placesByMap).sort(
 );
 
   /* SORT FUNCTION */
-  const sortResources = (items: any[]) => {
-    const sorted = [...items];
+ const sortResources = (items: any[]) => {
+  const sorted = [...items];
 
-    if (sortOption === "low") {
-      sorted.sort((a, b) => a.price - b.price);
-    } else if (sortOption === "high") {
-      sorted.sort((a, b) => b.price - a.price);
-    }
+  if (sortOption === "low") {
+    sorted.sort((a, b) => a.price - b.price);
+  } else if (sortOption === "high") {
+    sorted.sort((a, b) => b.price - a.price);
+  } else if (sortOption === "az") {
+    sorted.sort((a, b) =>
+      a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+    );
+  }
 
-    return sorted;
-  };
+  return sorted;
+};
 
   const mapImages: Record<string, string> = {
     bermuda: "/maps/bermuda.jpg",
@@ -207,6 +211,7 @@ const mapNames = Object.keys(placesByMap).sort(
         <option value="newest">Newest</option>
         <option value="low">Price: Low → High</option>
         <option value="high">Price: High → Low</option>
+        <option value="az">Name: A → Z</option>
       </select>
     </div>
   );
@@ -267,7 +272,7 @@ const mapNames = Object.keys(placesByMap).sort(
               <div className="max-w-6xl mx-auto mb-6">
                 <button
                   onClick={() => setSelectedMap(null)}
-                  className="text-sm text-purple-400 hover:underline"
+                  className="text-sm text-white-400 mt-1 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition"
                 >
                   ← Back to maps
                 </button>

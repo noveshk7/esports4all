@@ -66,7 +66,7 @@ const Footer = () => {
           {/* SOCIAL ICONS */}
           <div className="flex items-center gap-4 mt-2">
             <a
-              href="https://instagram.com/"
+              href="https://instagram.com/coach_selzer/"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded bg-white/5 hover:bg-white/10 transition"
@@ -75,7 +75,7 @@ const Footer = () => {
             </a>
 
             <a
-              href="https://youtube.com/"
+              href="https://youtube.com/@coach_selzer"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded bg-white/5 hover:bg-white/10 transition"
@@ -84,7 +84,7 @@ const Footer = () => {
             </a>
 
             <a
-              href="https://twitter.com/"
+              href="https://www.discord.gg/ccJ3Y9zEnn"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded bg-white/5 hover:bg-white/10 transition"

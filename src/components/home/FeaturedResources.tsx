@@ -11,7 +11,7 @@ const FeaturedResources = () => {
         .from("resources")
         .select("*")
         .eq("featured", true)
-        .order("created_at", { ascending: false })
+        .order("featured_order", { ascending: true }) // 🔥 MAIN CHANGE
         .limit(6);
 
       setFeaturedResources(data || []);

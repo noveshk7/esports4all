@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Auth from "./pages/Auth";
@@ -12,38 +13,49 @@ import PrivacyPolicy from "./pages/policies/PrivacyPolicy";
 import RefundPolicy from "./pages/policies/RefundPolicy";
 import Terms from "./pages/policies/Terms";
 import Disclaimer from "./pages/policies/Disclaimer";
+import ScrollToTop from "./components/ScrollToTop";
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/products" element={<Products />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/my-resources" element={<MyResources />} />
-      <Route
-        path="/my-resources"
-        element={
-          <PrivateRoute>
-            <MyResources />
-          </PrivateRoute>
-        }
-      />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/refund-policy" element={<RefundPolicy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/disclaimer" element={<Disclaimer />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <AdminDashboard />
-          </AdminRoute>
-        }
-      />
-    </Routes>
+    <>
+      {/* 🔥 GLOBAL SCROLL FIX */}
+      <ScrollToTop />
+
+      <Routes>
+        {/* PUBLIC ROUTES */}
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/auth" element={<Auth />} />
+
+        {/* POLICIES */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/disclaimer" element={<Disclaimer />} />
+
+        {/* 🔒 PROTECTED ROUTE */}
+        <Route
+          path="/my-resources"
+          element={
+            <PrivateRoute>
+              <MyResources />
+            </PrivateRoute>
+          }
+        />
+
+        {/* 🔒 ADMIN ROUTE */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+      </Routes>
+    </>
   );
 };
 
