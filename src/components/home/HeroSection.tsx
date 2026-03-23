@@ -38,7 +38,7 @@ const HeroSection = () => {
           window.scrollTo(0, 0);
           navigate("/products");
         }}
-            className="cursor-pointer group bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-purple-500/50 transition transform hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.25)]"
+            className="glow-border cursor-pointer group bg-white/5 rounded-2xl p-6 transform hover:scale-105 transition hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]"
           >
             <div className="flex items-center justify-between">
               <ShoppingBag className="text-purple-400" size={28} />
@@ -50,7 +50,7 @@ const HeroSection = () => {
             </h3>
 
             <p className="text-sm text-gray-400 mt-2">
-              Rotation paths, PDFs, sheets and pro-level resources.
+              Rotation paths, PDFs, Maps and Pro-level resources.
             </p>
           </div>
 
