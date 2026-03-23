@@ -5,23 +5,25 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 /* SEARCH BAR */
-  const SearchBar = ({
-    value,
-    onChange,
-  }: {
-    value: string;
-    onChange: (v: string) => void;
-  }) => (
-    <div className="max-w-6xl mx-auto mb-6">
-      <input
-        type="text"
-        placeholder="Search..."
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-purple-500"
-      />
-    </div>
-  );
+const SearchBar = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) => (
+  <div className="max-w-6xl mx-auto mb-6">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full bg-black border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-purple-500"
+    />
+  </div>
+);
+
+
 
 const Products = () => {
   const [mapSearch, setMapSearch] = useState("");
@@ -59,22 +61,15 @@ const Products = () => {
     fetchByType("rotation-place", setRotationPlaces);
   }, []);
 
-  
-
   const filterBySearch = (items: any[], query: string) => {
-  if (!query) return items;
+    if (!query) return items;
 
-  const normalizedQuery = query
-    .toLowerCase()
-    .replace(/\s+/g, "");
+    const normalizedQuery = query.toLowerCase().replace(/\s+/g, "");
 
-  return items.filter((item) =>
-    item.title
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .includes(normalizedQuery)
-  );
-};
+    return items.filter((item) =>
+      item.title.toLowerCase().replace(/\s+/g, "").includes(normalizedQuery),
+    );
+  };
 
   /* GROUP ROTATION PLACES BY MAP */
   const placesByMap = rotationPlaces.reduce((acc: any, place: any) => {
@@ -84,7 +79,18 @@ const Products = () => {
     return acc;
   }, {});
 
-  const mapNames = Object.keys(placesByMap);
+  const order = [
+  "Bermuda",
+  "Purgatory",
+  "Kalahari",
+  "Alpine",
+  "NeXTerra",
+  "Solara",
+];
+
+const mapNames = Object.keys(placesByMap).sort(
+  (a, b) => order.indexOf(a) - order.indexOf(b)
+);
 
   /* SORT FUNCTION */
   const sortResources = (items: any[]) => {
@@ -97,6 +103,15 @@ const Products = () => {
     }
 
     return sorted;
+  };
+
+  const mapImages: Record<string, string> = {
+    bermuda: "/maps/bermuda.jpg",
+    purgatory: "/maps/purgatory.jpg",
+    kalahari: "/maps/kalahari.jpg",
+    alpine: "/maps/alpine.jpg",
+    nexterra: "/maps/nexterra.jpg",
+    solara: "/maps/solara.jpg",
   };
 
   /* PRICE BLOCK */
@@ -221,21 +236,29 @@ const Products = () => {
           {!selectedMap ? (
             <>
               <h2 className="text-center text-2xl font-semibold mb-8">
-                Rotation Paths
+                Rotation Paths - Maps
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {mapNames.map((map) => (
-                  <button
+                  <div
                     key={map}
                     onClick={() => setSelectedMap(map)}
-                    className="bg-white/5 border border-white/10 rounded-xl p-6 text-left hover:bg-white/10 transition"
+                    className="cursor-pointer bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:scale-105 transition hover:border-purple-500/40"
                   >
-                    <h3 className="text-xl font-semibold">{map}</h3>
-                    <p className="text-sm text-gray-400 mt-1">
-                      {placesByMap[map].length} places available
-                    </p>
-                  </button>
+                    <img
+                      src={mapImages[map.toLowerCase()]}
+                      alt={map}
+                      className="h-40 w-full object-cover"
+                    />
+
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold">{map}</h3>
+                      <p className="text-sm text-gray-400 mt-1">
+                        {placesByMap[map].length} places available
+                      </p>
+                    </div>
+                  </div>
                 ))}
               </div>
             </>
@@ -251,7 +274,7 @@ const Products = () => {
               </div>
 
               <h2 className="text-center text-2xl font-semibold mb-8">
-                {selectedMap} Rotation Places
+                {selectedMap} Rotation Path - Places
               </h2>
 
               <SearchBar value={mapSearch} onChange={setMapSearch} />
@@ -260,7 +283,7 @@ const Products = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {sortResources(
-                  filterBySearch(placesByMap[selectedMap], mapSearch)
+                  filterBySearch(placesByMap[selectedMap], mapSearch),
                 ).map((item: any) => (
                   <ResourceCard key={item.id} item={item} />
                 ))}
@@ -311,9 +334,7 @@ const Products = () => {
       {/* INFO MAPS */}
       {activeTab === "info-maps" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-2xl font-semibold mb-8">
-            Info Maps
-          </h2>
+          <h2 className="text-center text-2xl font-semibold mb-8">Info Maps</h2>
 
           <SortBar />
 
@@ -328,9 +349,7 @@ const Products = () => {
       {/* HQ MAPS */}
       {activeTab === "hq-maps" && (
         <section className="mt-12 px-4 sm:px-6">
-          <h2 className="text-center text-2xl font-semibold mb-8">
-            HQ Maps
-          </h2>
+          <h2 className="text-center text-2xl font-semibold mb-8">HQ Maps</h2>
 
           <SortBar />
 

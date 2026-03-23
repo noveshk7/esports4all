@@ -185,12 +185,19 @@ const AdminDashboard = () => {
             </select>
 
             {resourceType === "rotation-place" && (
-              <input
-                placeholder="Map name (Bermuda, Alpine...)"
+              <select
                 value={mapName}
                 onChange={(e) => setMapName(e.target.value)}
                 className="w-full bg-black/60 px-4 py-3 rounded-lg"
-              />
+              >
+                <option value="">Select Map</option>
+                <option value="Bermuda">Bermuda</option>
+                <option value="Purgatory">Purgatory</option>
+                <option value="Kalahari">Kalahari</option>
+                <option value="Alpine">Alpine</option>
+                <option value="NeXTerra">NeXTerra</option>
+                <option value="Solara">Solara</option>
+              </select>
             )}
 
             <input
