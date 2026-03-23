@@ -6,9 +6,9 @@ type Category =
   | "hq-maps";
 
 const tabs: { label: string; value: Category }[] = [
-  { label: "Maps", value: "maps" },
+  { label: "Rotation Paths", value: "maps" },
   { label: "PDFs", value: "pdfs" },
-  { label: "Sheets", value: "sheets" },
+  { label: "Team Reso.", value: "sheets" },
   { label: "Info Maps", value: "info-maps" },
   { label: "HQ Maps", value: "hq-maps" },
 ];

@@ -302,7 +302,7 @@ const mapNames = Object.keys(placesByMap).sort(
       {activeTab === "pdfs" && (
         <section className="mt-12 px-4 sm:px-6">
           <h2 className="text-center text-2xl font-semibold mb-8">
-            Strategy Guides
+            PDFs / Guides
           </h2>
 
           <SearchBar value={pdfSearch} onChange={setPdfSearch} />
