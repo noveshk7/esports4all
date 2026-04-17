@@ -64,7 +64,7 @@ const About = () => {
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-white/10 rounded-2xl p-8 text-center">
           <MessageCircle className="mx-auto mb-4 text-purple-400" size={36} />
           <h2 className="text-2xl font-semibold mb-2">
-            Join the Esports4All Discord
+            Join Esports4All Discord to Hire Coach & For Free Classes
           </h2>
           <p className="text-gray-400 text-sm max-w-2xl mx-auto">
             Be part of the Esports4All community. Get strategy discussions,
@@ -133,7 +133,7 @@ const About = () => {
         <div className="grid sm:grid-cols-2 gap-6">
           {[
             "3+ Years Coaching Experience",
-            "100+ Players & Teams Trained",
+            "50+ Teams Trained",
             "Specialist in Rotations & Strategy",
             "Multiple Competitive Success Stories",
           ].map((item) => (
@@ -160,7 +160,7 @@ const About = () => {
           <Service
             title="1-on-1 Player / Team Coaching"
             desc="Personalized sessions focused on individual improvement"
-            price="₹499 / hr"
+            price="₹499 / hr session"
           />
           <Service
             title="Team Coaching Package"
@@ -168,7 +168,7 @@ const About = () => {
             price="₹1,999 / 5 sessions"
           />
           <Service
-            title="Strategy Review"
+            title="VOD Review"
             desc="In-depth gameplay review with actionable feedback"
             price="₹299 / review"
           />

@@ -3,6 +3,8 @@ import CategoryTabs from "../components/products/CategoryTabs";
 import Footer from "../components/Footer";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { ArrowLeft } from "lucide-react";
+
 
 /* SEARCH BAR */
 const SearchBar = ({
@@ -241,7 +243,7 @@ const mapNames = Object.keys(placesByMap).sort(
           {!selectedMap ? (
             <>
               <h2 className="text-center text-2xl font-semibold mb-8">
-                Rotation Paths - Maps
+                Rotation Maps
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -270,16 +272,17 @@ const mapNames = Object.keys(placesByMap).sort(
           ) : (
             <>
               <div className="max-w-6xl mx-auto mb-6">
-                <button
-                  onClick={() => setSelectedMap(null)}
-                  className="text-sm text-white-400 mt-1 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition"
-                >
-                  ← Back to maps
-                </button>
-              </div>
+  <button
+    onClick={() => setSelectedMap(null)}
+    className="text-sm text-white mt-1 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition flex items-center gap-2"
+  >
+    <ArrowLeft size={18} />
+    Back to Maps
+  </button>
+</div>
 
               <h2 className="text-center text-2xl font-semibold mb-8">
-                {selectedMap} Rotation Path - Places
+              Rotation Maps - {selectedMap}
               </h2>
 
               <SearchBar value={mapSearch} onChange={setMapSearch} />

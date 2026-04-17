@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { Send, MessageCircle, Instagram, Mail } from "lucide-react";
+import { Send, Instagram, Mail } from "lucide-react";
 
 const Contact = () => {
   return (
@@ -44,7 +44,7 @@ const Contact = () => {
             <div>
               <label className="text-sm text-gray-400">Message</label>
               <textarea
-                placeholder="Tell me about your coaching needs..."
+                placeholder="Tell me about your issue or needs..."
                 className="mt-1 w-full bg-black/60 border border-white/10 rounded-lg px-4 py-2 h-28 focus:outline-none focus:border-purple-500"
               />
             </div>
@@ -64,19 +64,14 @@ const Contact = () => {
 
             <div className="space-y-3">
               <ContactItem
-                icon={<MessageCircle className="text-green-500" />}
-                title="WhatsApp"
-                value="+91 7668268104"
-              />
-              <ContactItem
                 icon={<Instagram className="text-pink-500" />}
                 title="Instagram"
-                value="@coach_selzer"
+                value="@esports4all.01"
               />
               <ContactItem
                 icon={<Mail className="text-blue-500" />}
                 title="Email"
-                value="helloselzer@gmail.com"
+                value="e4asupport@gmail.com"
               />
             </div>
           </div>
@@ -86,12 +81,10 @@ const Contact = () => {
             <h2 className="text-xl font-semibold mb-4">Response Time</h2>
 
             <p className="text-sm text-gray-400 mb-4">
-              I typically respond within 24 hours. For urgent coaching
-              inquiries, WhatsApp is the fastest way to reach me.
+              Our team typically respond within 24 hours. For any queries or need any help you can contact to our instagram for a faster response or you can mail us on our email also.
             </p>
 
             <div className="space-y-2 text-sm">
-              <ResponseRow label="WhatsApp" value="Fastest" highlight />
               <ResponseRow label="Email" value="24–48 hours" />
               <ResponseRow label="Instagram DM" value="24–48 hours" />
             </div>
