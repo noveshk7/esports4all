@@ -14,13 +14,14 @@ import RefundPolicy from "./pages/policies/RefundPolicy";
 import Terms from "./pages/policies/Terms";
 import Disclaimer from "./pages/policies/Disclaimer";
 import ScrollToTop from "./components/ScrollToTop";
+import CopyrightPopup from "./components/CopyrightPopup";
 
 const App = () => {
   return (
     <>
       {/* 🔥 GLOBAL SCROLL FIX */}
       <ScrollToTop />
-
+ <CopyrightPopup />
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
