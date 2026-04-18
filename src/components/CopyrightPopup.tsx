@@ -2,28 +2,41 @@ import { useEffect, useState } from "react";
 
 const CopyrightPopup = () => {
   const [open, setOpen] = useState(false);
+  const [dontShow, setDontShow] = useState(false);
 
   useEffect(() => {
     const hasVisited = localStorage.getItem("visited_before");
     const sessionShown = sessionStorage.getItem("popup_shown");
+    const disabled = localStorage.getItem("popup_disabled");
 
-    // ❌ If already shown in this session → don't show again (refresh case)
+    // ❌ User chose "Don't show again"
+    if (disabled === "true") return;
+
+    // ❌ Already shown in this session (refresh case)
     if (sessionShown) return;
 
-    // ✅ FIRST VISIT → instant popup
+    // ✅ First visit → instant
     if (!hasVisited) {
       setOpen(true);
       localStorage.setItem("visited_before", "true");
       sessionStorage.setItem("popup_shown", "true");
     } 
-    // 🔁 RETURN VISIT → delayed popup
+    // 🔁 Returning visit → delayed
     else {
       setTimeout(() => {
         setOpen(true);
         sessionStorage.setItem("popup_shown", "true");
-      }, 2000); // ⏱ 2 sec delay
+      }, 2000);
     }
   }, []);
+
+  const handleClose = () => {
+    // ✅ Save preference if checked
+    if (dontShow) {
+      localStorage.setItem("popup_disabled", "true");
+    }
+    setOpen(false);
+  };
 
   if (!open) return null;
 
@@ -43,8 +56,19 @@ const CopyrightPopup = () => {
           Unauthorized sharing, reselling, or distribution is strictly prohibited.
         </p>
 
+        {/* ✅ Checkbox */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-400">
+          <input
+            type="checkbox"
+            checked={dontShow}
+            onChange={(e) => setDontShow(e.target.checked)}
+            className="accent-purple-500"
+          />
+          <label>Don't show again</label>
+        </div>
+
         <button
-          onClick={() => setOpen(false)}
+          onClick={handleClose}
           className="mt-6 px-5 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm"
         >
           I Understand
